@@ -5,7 +5,7 @@ defmodule Statix do
 
       {addr, port, prefix} = Statix.config(__MODULE__)
       {:ok, header} = Conn.build_header(addr, port)
-      @statix_conn %Conn{header: [header, prefix], sock: __MODULE__}
+      @statix_conn %Conn{header: [header | prefix], sock: __MODULE__}
 
       def connect() do
         {:ok, sock} = Conn.open_sock()
