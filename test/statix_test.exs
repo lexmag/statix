@@ -86,4 +86,16 @@ defmodule StatixTest do
 
     refute_received _any
   end
+
+  test "set/2" do
+    Sample.set("sample", 2)
+
+    assert_receive {:server, "sample:2|s"}
+
+    Sample.set("sample", 2.1)
+
+    assert_receive {:server, "sample:2.1|s"}
+
+    refute_received _any
+  end
 end

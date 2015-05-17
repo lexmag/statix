@@ -55,7 +55,7 @@ def start(_type, _args) do
 end
 ```
 
-Thereafter, the `increment/1,2`, `decrement/1,2`, `gauge/2`, and `timing/2` functions will be successfully pushing metrics to the server.
+Thereafter, the `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, and `timing/2` functions will be successfully pushing metrics to the server.
 
 ### Configuration
 

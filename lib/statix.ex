@@ -32,6 +32,11 @@ defmodule Statix do
         @statix_conn
         |> Statix.transmit(:timing, key, val)
       end
+
+      def set(key, val) do
+        @statix_conn
+        |> Statix.transmit(:set, key, val)
+      end
     end
   end
 
