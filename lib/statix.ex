@@ -40,7 +40,7 @@ defmodule Statix do
     end
   end
 
-  def transmit(conn, type, key, val) do
+  def transmit(conn, type, key, val) when is_binary(key) or is_list(key) do
     Statix.Conn.transmit(conn, type, key, to_string(val))
   end
 

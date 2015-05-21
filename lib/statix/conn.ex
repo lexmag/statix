@@ -17,8 +17,7 @@ defmodule Statix.Conn do
     :gen_udp.open(0, [active: false])
   end
 
-  def transmit(%__MODULE__{} = conn, type, key, val)
-      when is_binary(key) and is_binary(val) do
+  def transmit(%__MODULE__{} = conn, type, key, val) when is_binary(val) do
     Packet.build(conn.header, type, key, val)
     |> transmit(conn.sock)
   end

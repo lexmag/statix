@@ -36,7 +36,7 @@ defmodule StatixTest do
 
     assert_receive {:server, "sample:1|c"}
 
-    Sample.increment("sample", 2)
+    Sample.increment(["sample"], 2)
 
     assert_receive {:server, "sample:2|c"}
 
@@ -52,7 +52,7 @@ defmodule StatixTest do
 
     assert_receive {:server, "sample:-1|c"}
 
-    Sample.decrement("sample", 2)
+    Sample.decrement(["sample"], 2)
 
     assert_receive {:server, "sample:-2|c"}
 
@@ -64,7 +64,7 @@ defmodule StatixTest do
   end
 
   test "gauge/2" do
-    Sample.gauge("sample", 2)
+    Sample.gauge(["sample"], 2)
 
     assert_receive {:server, "sample:2|g"}
 
@@ -76,7 +76,7 @@ defmodule StatixTest do
   end
 
   test "timing/2" do
-    Sample.timing("sample", 2)
+    Sample.timing(["sample"], 2)
 
     assert_receive {:server, "sample:2|ms"}
 
@@ -88,7 +88,7 @@ defmodule StatixTest do
   end
 
   test "set/2" do
-    Sample.set("sample", 2)
+    Sample.set(["sample"], 2)
 
     assert_receive {:server, "sample:2|s"}
 
