@@ -63,6 +63,7 @@ Statix could be configured globally with:
 
 ```elixir
 config :statix,
+  prefix: "sample",
   address: {127, 0, 0, 1}, port: 8181
 ```
 
