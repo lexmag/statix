@@ -55,7 +55,7 @@ def start(_type, _args) do
 end
 ```
 
-Thereafter, the `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, and `timing/2` functions will be successfully pushing metrics to the server.
+Thereafter, the `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, `timing/2` and `measure/2` functions will be successfully pushing metrics to the server.
 
 ### Configuration
 
@@ -64,7 +64,7 @@ Statix could be configured globally with:
 ```elixir
 config :statix,
   prefix: "sample",
-  address: {127, 0, 0, 1}, port: 8181
+  host: {127, 0, 0, 1}, port: 8181
 ```
 
 and on a per connection basis as well:

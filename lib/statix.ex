@@ -1,8 +1,8 @@
 defmodule Statix do
   defmacro __using__(_opts) do
     quote location: :keep do
-      {addr, port, prefix} = Statix.config(__MODULE__)
-      conn = Statix.Conn.new(addr, port)
+      {host, port, prefix} = Statix.config(__MODULE__)
+      conn = Statix.Conn.new(host, port)
       header = [conn.header | prefix]
       @statix_conn %{conn | header: header, sock: __MODULE__}
 
@@ -54,7 +54,7 @@ defmodule Statix do
 
   def config(module) do
     {prefix1, prefix2, env} = get_params(module)
-    {Keyword.get(env, :address, {127, 0, 0, 1}),
+    {Keyword.get(env, :host, {127, 0, 0, 1}),
      Keyword.get(env, :port, 8125),
      build_prefix(prefix1, prefix2)}
   end

@@ -3,7 +3,12 @@ defmodule Statix.Conn do
 
   alias Statix.Packet
 
-  def new(addr, port) do
+  def new(host, port) when is_binary(host) do
+    new(String.to_char_list(host), port)
+  end
+
+  def new(host, port) when is_list(host) or is_tuple(host) do
+    {:ok, addr} = :inet.getaddr(host, :inet)
     header = Packet.header(addr, port)
     %__MODULE__{header: header}
   end
