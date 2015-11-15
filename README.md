@@ -50,7 +50,7 @@ In general, this function is called during the invocation of your application `s
 
 ```elixir
 def start(_type, _args) do
-  :ok = Sample.Statix.connect()
+  :ok = Sample.Statix.connect
   # ...
 end
 ```

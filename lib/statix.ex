@@ -33,6 +33,15 @@ defmodule Statix do
         |> Statix.transmit(:timing, key, val)
       end
 
+      # TODO: Use `:erlang.system_time/1` when we depend on Elixir ~> 1.2
+      def measure(key, fun) when is_function(fun, 0) do
+        ts1 = :os.timestamp
+        fun.()
+        ts2 = :os.timestamp
+        elapsed_ms = :timer.now_diff(ts2, ts1) |> div(1000)
+        timing(key, elapsed_ms)
+      end
+
       def set(key, val) do
         @statix_conn
         |> Statix.transmit(:set, key, val)
