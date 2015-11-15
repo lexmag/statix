@@ -10,7 +10,8 @@ defmodule Statix.Mixfile do
   end
 
   def application() do
-    [applications: []]
+    [applications: [],
+     env: [host: '127.0.0.1', port: 8125]]
   end
 
   defp description() do
