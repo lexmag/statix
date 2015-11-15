@@ -29,7 +29,7 @@ def application() do
 end
 
 defp deps() do
-  [{:statix, "~> 0.0.1"}]
+  [{:statix, "~> 0.5"}]
 end
 ```
 
@@ -64,7 +64,7 @@ Statix could be configured globally with:
 ```elixir
 config :statix,
   prefix: "sample",
-  host: {127, 0, 0, 1}, port: 8181
+  host: "127.0.0.1", port: 8181
 ```
 
 and on a per connection basis as well:

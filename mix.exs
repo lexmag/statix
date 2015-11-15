@@ -3,7 +3,7 @@ defmodule Statix.Mixfile do
 
   def project() do
     [app: :statix,
-     version: "0.0.3",
+     version: "0.5.0",
      elixir: "~> 1.0",
      description: description(),
      package: package()]
