@@ -1,15 +1,14 @@
 defmodule Statix do
   defmacro __using__(_opts) do
     quote location: :keep do
-      alias Statix.Conn
-
       {addr, port, prefix} = Statix.config(__MODULE__)
-      {:ok, header} = Conn.build_header(addr, port)
-      @statix_conn %Conn{header: [header | prefix], sock: __MODULE__}
+      conn = Statix.Conn.new(addr, port)
+      header = [conn.header | prefix]
+      @statix_conn %{conn | header: header, sock: __MODULE__}
 
       def connect() do
-        {:ok, sock} = Conn.open_sock()
-        Process.register(sock, __MODULE__)
+        conn = Statix.Conn.open(@statix_conn)
+        Process.register(conn.sock, __MODULE__)
         :ok
       end
 

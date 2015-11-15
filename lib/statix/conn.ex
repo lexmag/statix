@@ -3,18 +3,14 @@ defmodule Statix.Conn do
 
   alias Statix.Packet
 
-  def open(addr, port) do
-    {:ok, header} = build_header(addr, port)
-    {:ok, sock} = open_sock()
-    %__MODULE__{sock: sock, header: header}
+  def new(addr, port) do
+    header = Packet.header(addr, port)
+    %__MODULE__{header: header}
   end
 
-  def build_header(addr, port) do
-    {:ok, Packet.header(addr, port)}
-  end
-
-  def open_sock() do
-    :gen_udp.open(0, [active: false])
+  def open(%__MODULE__{} = conn) do
+    {:ok, sock} = :gen_udp.open(0, [active: false])
+    %__MODULE__{conn | sock: sock}
   end
 
   def transmit(%__MODULE__{} = conn, type, key, val) when is_binary(val) do
@@ -25,7 +21,7 @@ defmodule Statix.Conn do
   defp transmit(packet, sock) do
     Port.command(sock, packet)
     receive do
-      {:inet_reply, _sock, status} -> status
+      {:inet_reply, _port, status} -> status
     end
   end
 end
