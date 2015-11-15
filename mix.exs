@@ -19,7 +19,7 @@ defmodule Statix.Mixfile do
   end
 
   defp package() do
-    [contributors: ["Aleksei Magusev"],
+    [maintainers: ["Aleksei Magusev"],
      licenses: ["ISC"],
      links: %{"GitHub" => "https://github.com/lexmag/statix"}]
   end
