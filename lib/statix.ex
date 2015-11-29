@@ -32,7 +32,7 @@ defmodule Statix do
         |> Statix.transmit(:timing, key, val)
       end
 
-      # TODO: Use `:erlang.system_time/1` when we depend on Elixir ~> 1.2
+      # TODO: Use `:erlang.monotonic_time/1` when we depend on Elixir ~> 1.2
       def measure(key, fun) when is_function(fun, 0) do
         ts1 = :os.timestamp
         fun.()
