@@ -64,7 +64,8 @@ Statix could be configured globally with:
 ```elixir
 config :statix,
   prefix: "sample",
-  host: "127.0.0.1", port: 8181
+  host: "stats.tld",
+  port: 8181
 ```
 
 and on a per connection basis as well:
@@ -73,6 +74,12 @@ and on a per connection basis as well:
 config :statix, Sample.Statix,
   port: 8811
 ```
+
+The defaults are:
+
+* prefix: `nil`
+* host: `"127.0.0.1"`
+* port: `8125`
 
 ## License
 

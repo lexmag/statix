@@ -59,7 +59,7 @@ defmodule Statix do
 
   def config(module) do
     {prefix1, prefix2, env} = get_params(module)
-    {Keyword.get(env, :host, '127.0.0.1'),
+    {Keyword.get(env, :host, "127.0.0.1"),
      Keyword.get(env, :port, 8125),
      build_prefix(prefix1, prefix2)}
   end
