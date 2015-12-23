@@ -10,12 +10,18 @@ defmodule Statix.Packet do
      band(n4, 0xFF)]
   end
 
-  def build(header, type, key, val) do
-    [header, key, ?:, val | metric(type)]
+  def build(header, name, key, val) do
+    [header, key, ?:, val, ?| | metric_type(name)]
   end
 
-  defp metric(:counter), do: '|c'
-  defp metric(:gauge),   do: '|g'
-  defp metric(:timing),  do: '|ms'
-  defp metric(:set),     do: '|s'
+  metrics = %{
+    counter: "c",
+    gauge: "g",
+    histogram: "h",
+    timing: "ms",
+    set: "s"
+  }
+  for {name, type} <- metrics do
+    defp metric_type(unquote(name)), do: unquote(type)
+  end
 end

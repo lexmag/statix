@@ -4,7 +4,7 @@ defmodule StatixTest do
   defmodule Server do
     def start(test, port) do
       {:ok, sock} = :gen_udp.open(port, [:binary, active: false])
-      Task.start_link(fn() ->
+      Task.start_link(fn ->
         recv(test, sock)
       end)
     end
@@ -69,6 +69,16 @@ defmodule StatixTest do
     refute_received _any
   end
 
+  test "histogram/2" do
+    Sample.histogram("sample", 2)
+    assert_receive {:server, "sample:2|h"}
+
+    Sample.histogram("sample", 2.1)
+    assert_receive {:server, "sample:2.1|h"}
+
+    refute_received _any
+  end
+
   test "timing/2" do
     Sample.timing(["sample"], 2)
     assert_receive {:server, "sample:2|ms"}
@@ -80,7 +90,7 @@ defmodule StatixTest do
   end
 
   test "measure/2" do
-    Sample.measure(["sample"], fn() ->
+    Sample.measure(["sample"], fn ->
       :timer.sleep(100)
     end)
     assert_receive {:server, <<"sample:10", _, "|ms">>}

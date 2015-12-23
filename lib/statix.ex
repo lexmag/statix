@@ -27,6 +27,11 @@ defmodule Statix do
         |> Statix.transmit(:gauge, key, val)
       end
 
+      def histogram(key, val) do
+        @statix_conn
+        |> Statix.transmit(:histogram, key, val)
+      end
+
       def timing(key, val) do
         @statix_conn
         |> Statix.transmit(:timing, key, val)
