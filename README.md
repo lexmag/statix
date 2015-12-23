@@ -29,7 +29,7 @@ def application() do
 end
 
 defp deps() do
-  [{:statix, "~> 0.5"}]
+  [{:statix, "~> 0.6"}]
 end
 ```
 
