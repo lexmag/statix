@@ -37,13 +37,20 @@ defmodule Statix do
         |> Statix.transmit(:timing, key, val)
       end
 
+      @doc """
+      Measure a function call.
+
+      It returns the result of the function call, making it suitable
+      for pipelining and easily wrapping existing code.
+      """
       # TODO: Use `:erlang.monotonic_time/1` when we depend on Elixir ~> 1.2
       def measure(key, fun) when is_function(fun, 0) do
         ts1 = :os.timestamp
-        fun.()
+        result = fun.()
         ts2 = :os.timestamp
         elapsed_ms = :timer.now_diff(ts2, ts1) |> div(1000)
         timing(key, elapsed_ms)
+        result
       end
 
       def set(key, val) do
