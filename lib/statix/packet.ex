@@ -1,13 +1,18 @@
 defmodule Statix.Packet do
   use Bitwise
 
+  otp_release = :erlang.system_info(:otp_release)
+  @addr_family if(otp_release >= '19', do: [1], else: [])
+
   def header({n1, n2, n3, n4}, port) do
-    [band(bsr(port, 8), 0xFF),
-     band(port, 0xFF),
-     band(n1, 0xFF),
-     band(n2, 0xFF),
-     band(n3, 0xFF),
-     band(n4, 0xFF)]
+    @addr_family ++ [
+      band(bsr(port, 8), 0xFF),
+      band(port, 0xFF),
+      band(n1, 0xFF),
+      band(n2, 0xFF),
+      band(n3, 0xFF),
+      band(n4, 0xFF)
+    ]
   end
 
   def build(header, name, key, val) do
