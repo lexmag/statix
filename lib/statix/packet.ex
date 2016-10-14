@@ -15,8 +15,9 @@ defmodule Statix.Packet do
     ]
   end
 
-  def build(header, name, key, val) do
-    [header, key, ?:, val, ?| | metric_type(name)]
+  def build(header, name, key, val, options) do
+    [header, key, ?:, val, ?| , metric_type(name)]
+    |> set_tags_option(options[:tags])
   end
 
   metrics = %{
@@ -28,5 +29,13 @@ defmodule Statix.Packet do
   }
   for {name, type} <- metrics do
     defp metric_type(unquote(name)), do: unquote(type)
+  end
+
+  defp set_tags_option(packet, nil) do
+    packet
+  end
+
+  defp set_tags_option(packet, tags) do
+    [packet | ["|#", Enum.join(tags, ",")]]
   end
 end

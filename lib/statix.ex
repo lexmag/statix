@@ -12,29 +12,29 @@ defmodule Statix do
         :ok
       end
 
-      def increment(key, val \\ "1") do
+      def increment(key, val \\ "1", options \\ []) do
         @statix_conn
-        |> Statix.transmit(:counter, key, val)
+        |> Statix.transmit(:counter, key, val, options)
       end
 
-      def decrement(key, val \\ "1") do
+      def decrement(key, val \\ "1", options \\ []) do
         @statix_conn
-        |> Statix.transmit(:counter, key, [?-, to_string(val)])
+        |> Statix.transmit(:counter, key, [?-, to_string(val)], options)
       end
 
-      def gauge(key, val) do
+      def gauge(key, val, options \\ [] ) do
         @statix_conn
-        |> Statix.transmit(:gauge, key, val)
+        |> Statix.transmit(:gauge, key, val, options)
       end
 
-      def histogram(key, val) do
+      def histogram(key, val, options \\ []) do
         @statix_conn
-        |> Statix.transmit(:histogram, key, val)
+        |> Statix.transmit(:histogram, key, val, options)
       end
 
-      def timing(key, val) do
+      def timing(key, val, options \\ []) do
         @statix_conn
-        |> Statix.transmit(:timing, key, val)
+        |> Statix.transmit(:timing, key, val, options)
       end
 
       @doc """
@@ -43,23 +43,23 @@ defmodule Statix do
       It returns the result of the function call, making it suitable
       for pipelining and easily wrapping existing code.
       """
-      def measure(key, fun) when is_function(fun, 0) do
+      def measure(key, options \\ [], fun) when is_function(fun, 0) do
         {elapsed, result} = :timer.tc(fun)
 
-        timing(key, div(elapsed, 1000))
+        timing(key, div(elapsed, 1000), options)
 
         result
       end
 
-      def set(key, val) do
+      def set(key, val, options \\ []) do
         @statix_conn
-        |> Statix.transmit(:set, key, val)
+        |> Statix.transmit(:set, key, val, options)
       end
     end
   end
 
-  def transmit(conn, type, key, val) when is_binary(key) or is_list(key) do
-    Statix.Conn.transmit(conn, type, key, to_string(val))
+  def transmit(conn, type, key, val, options \\ []) when is_binary(key) or is_list(key) do
+    Statix.Conn.transmit(conn, type, key, to_string(val), options)
   end
 
   def config(module) do
