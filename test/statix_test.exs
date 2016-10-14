@@ -40,8 +40,8 @@ defmodule StatixTest do
     Sample.increment(["sample"], 2)
     assert_receive {:server, "sample:2|c"}
 
-    Sample.increment("sample", 2.1)
-    assert_receive {:server, "sample:2.1|c"}
+    Sample.increment("sample", 2.1, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample:2.1|c|#foo:bar,baz"}
 
     refute_received _any
   end
@@ -56,6 +56,9 @@ defmodule StatixTest do
     Sample.decrement("sample", 2.1)
     assert_receive {:server, "sample:-2.1|c"}
 
+    Sample.decrement("sample", 2.1, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample:-2.1|c|#foo:bar,baz"}
+
     refute_received _any
   end
 
@@ -65,6 +68,8 @@ defmodule StatixTest do
 
     Sample.gauge("sample", 2.1)
     assert_receive {:server, "sample:2.1|g"}
+    Sample.gauge("sample", 2.1, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample:2.1|g|#foo:bar,baz"}
 
     refute_received _any
   end
@@ -75,6 +80,8 @@ defmodule StatixTest do
 
     Sample.histogram("sample", 2.1)
     assert_receive {:server, "sample:2.1|h"}
+    Sample.histogram("sample", 2.1, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample:2.1|h|#foo:bar,baz"}
 
     refute_received _any
   end
