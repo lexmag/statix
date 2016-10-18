@@ -16,8 +16,10 @@ defmodule Statix.Packet do
   end
 
   def build(header, name, key, val, options) do
-    
-    [header, key, ?:, val, ?| , metric_type(name)| set_options(options)]
+    [header, key, ?:, val,  ?|,  metric_type(name)]
+    |> set_option(:sample_rate,options[:sample_rate])
+    |> set_option(:tags,options[:tags])
+
   end
 
   metrics = %{
@@ -30,15 +32,12 @@ defmodule Statix.Packet do
   for {name, type} <- metrics do
     defp metric_type(unquote(name)), do: unquote(type)
   end
-  defp set_options([]) do
-    []
+  defp set_option(stats, _, nil), do: stats
+  defp set_option(stats, :sample_rate,sample_rate) do
+    [stats| ["|@", :io_lib.format('~.2f', [sample_rate])]]
   end
-  defp set_options(options) do
-    if tags = options[:tags] do
-      ["|#", Enum.join(tags, ",") ]
-    else
-      []
-    end
+  defp set_option(stats, :tags, tags) do
+    [stats| ["|#", Enum.join(tags,",") ]]
   end
 
 end
