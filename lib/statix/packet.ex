@@ -16,8 +16,9 @@ defmodule Statix.Packet do
   end
 
   def build(header, name, key, val, options) do
-    [header, key, ?:, val, ?| , metric_type(name)]
-    |> set_tags_option(options[:tags])
+    [header, key, ?:, val,  ?|,  metric_type(name)]
+    |> set_option(:sample_rate, options[:sample_rate])
+    |> set_option(:tags, options[:tags])
   end
 
   metrics = %{
@@ -31,11 +32,15 @@ defmodule Statix.Packet do
     defp metric_type(unquote(name)), do: unquote(type)
   end
 
-  defp set_tags_option(packet, nil) do
+  defp set_option(packet, _kind, nil) do
     packet
   end
 
-  defp set_tags_option(packet, tags) do
+  defp set_option(packet, :sample_rate, sample_rate) do
+    [packet | ["|@", :erlang.float_to_binary(sample_rate, [:compact, decimals: 2])]]
+  end
+
+  defp set_option(packet, :tags, tags) do
     [packet | ["|#", Enum.join(tags, ",")]]
   end
 end

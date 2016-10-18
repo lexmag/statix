@@ -59,7 +59,11 @@ defmodule Statix do
   end
 
   def transmit(conn, type, key, val, options \\ []) when is_binary(key) or is_list(key) do
-    Statix.Conn.transmit(conn, type, key, to_string(val), options)
+    if Keyword.get(options, :sample_rate, 1.0) >= :rand.uniform() do
+      Statix.Conn.transmit(conn, type, key, to_string(val), options)
+    else
+      :ok
+    end
   end
 
   def config(module) do

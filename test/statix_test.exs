@@ -46,6 +46,11 @@ defmodule StatixTest do
     Sample.increment("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|c|#foo:bar,baz"}
 
+    Sample.increment("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample:3|c|@1.0|#foo,bar"}
+
+    Sample.increment("sample", 3, sample_rate: 0.0)
+
     refute_received _any
   end
 
@@ -61,6 +66,11 @@ defmodule StatixTest do
 
     Sample.decrement("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:-3|c|#foo:bar,baz"}
+    Sample.decrement("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+
+    assert_receive {:server, "sample:-3|c|@1.0|#foo,bar"}
+
+    Sample.decrement("sample", 3, sample_rate: 0.0)
 
     refute_received _any
   end
@@ -75,6 +85,11 @@ defmodule StatixTest do
     Sample.gauge("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|g|#foo:bar,baz"}
 
+    Sample.gauge("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample:3|g|@1.0|#foo,bar"}
+
+    Sample.gauge("sample", 3, sample_rate: 0.0)
+
     refute_received _any
   end
 
@@ -87,6 +102,11 @@ defmodule StatixTest do
 
     Sample.histogram("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|h|#foo:bar,baz"}
+
+    Sample.histogram("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample:3|h|@1.0|#foo,bar"}
+
+    Sample.histogram("sample", 3, sample_rate: 0.0)
 
     refute_received _any
   end
@@ -101,10 +121,15 @@ defmodule StatixTest do
     Sample.timing("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|ms|#foo:bar,baz"}
 
+    Sample.timing("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample:3|ms|@1.0|#foo,bar"}
+
+    Sample.timing("sample", 3, sample_rate: 0.0)
+
     refute_received _any
   end
 
-  test "measure/2" do
+  test "measure/2,3" do
     expected_result = "the stuff."
     fun_result = Sample.measure(["sample"], fn ->
       :timer.sleep(100)
@@ -113,10 +138,12 @@ defmodule StatixTest do
     assert_receive {:server, <<"sample:10", _, "|ms">>}
     assert fun_result == expected_result
 
-    Sample.measure("sample", [tags: ["foo:bar", "baz"]], fn ->
+    Sample.measure("sample", [sample_rate: 1.0, tags: ["foo", "bar"]], fn ->
       :timer.sleep(100)
     end)
-    assert_receive {:server, <<"sample:10", _, "|ms|#foo:bar,baz">>}
+    assert_receive {:server, <<"sample:10", _, "|ms|@1.0|#foo,bar">>}
+
+    refute_received _any
   end
 
   test "set/2,3" do
@@ -128,6 +155,11 @@ defmodule StatixTest do
 
     Sample.set("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|s|#foo:bar,baz"}
+
+    Sample.set("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample:3|s|@1.0|#foo,bar"}
+
+    Sample.set("sample", 3, sample_rate: 0.0)
 
     refute_received _any
   end
