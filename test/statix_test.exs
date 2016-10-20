@@ -96,6 +96,7 @@ defmodule StatixTest do
       :timer.sleep(100)
       expected_result
     end)
+
     assert_receive {:server, <<"sample:10", _, "|ms">>}
     assert fun_result == expected_result
   end
