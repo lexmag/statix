@@ -44,12 +44,12 @@ defmodule Statix do
       for pipelining and easily wrapping existing code.
       """
       # TODO: Use `:erlang.monotonic_time/1` when we depend on Elixir ~> 1.2
-      def measure(key, fun) when is_function(fun, 0) do
-        ts1 = :os.timestamp
-        result = fun.()
-        ts2 = :os.timestamp
-        elapsed_ms = :timer.now_diff(ts2, ts1) |> div(1000)
+      def measure(key, fun, args \\ []) when is_function(fun) do
+        {time, result} = :timer.tc(fun, args)
+
+        elapsed_ms = div(time, 1000)
         timing(key, elapsed_ms)
+
         result
       end
 
