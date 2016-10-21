@@ -61,7 +61,7 @@ defmodule Statix do
   end
 
   def transmit(conn, type, key, val,options \\ []) when is_binary(key) or is_list(key) do
-    if options[:sample_rate] || 1 >  :random.uniform do
+    if options[:sample_rate] || 1 >  :rand.uniform do
       Statix.Conn.transmit(conn, type, key, to_string(val), options)
     else
       :ok
