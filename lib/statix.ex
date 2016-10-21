@@ -43,12 +43,10 @@ defmodule Statix do
       It returns the result of the function call, making it suitable
       for pipelining and easily wrapping existing code.
       """
-      # TODO: Use `:erlang.monotonic_time/1` when we depend on Elixir ~> 1.2
       def measure(key, fun, args \\ []) when is_function(fun) do
         {time, result} = :timer.tc(fun, args)
 
-        elapsed_ms = div(time, 1000)
-        timing(key, elapsed_ms)
+        timing(key, div(time, 1000))
 
         result
       end
