@@ -12,29 +12,29 @@ defmodule Statix do
         :ok
       end
 
-      def increment(key, val \\ "1") do
+      def increment(key, val \\ "1", options \\ []) do
         @statix_conn
-        |> Statix.transmit(:counter, key, val)
+        |> Statix.transmit(:counter, key, val, options)
       end
 
-      def decrement(key, val \\ "1") do
+      def decrement(key, val \\ "1", options \\ []) do
         @statix_conn
-        |> Statix.transmit(:counter, key, [?-, to_string(val)])
+        |> Statix.transmit(:counter, key, [?-, to_string(val)], options)
       end
 
-      def gauge(key, val) do
+      def gauge(key, val, options \\ [] ) do
         @statix_conn
-        |> Statix.transmit(:gauge, key, val)
+        |> Statix.transmit(:gauge, key, val, options)
       end
 
-      def histogram(key, val) do
+      def histogram(key, val, options \\ []) do
         @statix_conn
-        |> Statix.transmit(:histogram, key, val)
+        |> Statix.transmit(:histogram, key, val, options)
       end
 
-      def timing(key, val) do
+      def timing(key, val, options \\ []) do
         @statix_conn
-        |> Statix.transmit(:timing, key, val)
+        |> Statix.transmit(:timing, key, val, options)
       end
 
       @doc """
@@ -44,24 +44,28 @@ defmodule Statix do
       for pipelining and easily wrapping existing code.
       """
       # TODO: Use `:erlang.monotonic_time/1` when we depend on Elixir ~> 1.2
-      def measure(key, fun) when is_function(fun, 0) do
+      def measure(key, options \\ [], fun) when is_function(fun, 0) do
         ts1 = :os.timestamp
         result = fun.()
         ts2 = :os.timestamp
         elapsed_ms = :timer.now_diff(ts2, ts1) |> div(1000)
-        timing(key, elapsed_ms)
+        timing(key, elapsed_ms, options)
         result
       end
 
-      def set(key, val) do
+      def set(key, val, options  \\ []) do
         @statix_conn
-        |> Statix.transmit(:set, key, val)
+        |> Statix.transmit(:set, key, val, options)
       end
     end
   end
 
-  def transmit(conn, type, key, val) when is_binary(key) or is_list(key) do
-    Statix.Conn.transmit(conn, type, key, to_string(val))
+  def transmit(conn, type, key, val, options \\ []) when is_binary(key) or is_list(key) do
+    if Keyword.get(options, :sample_rate, 1.0) >  :rand.uniform do
+      Statix.Conn.transmit(conn, type, key, to_string(val), options)
+    else
+      :ok
+    end
   end
 
   def config(module) do

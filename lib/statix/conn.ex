@@ -18,8 +18,8 @@ defmodule Statix.Conn do
     %__MODULE__{conn | sock: sock}
   end
 
-  def transmit(%__MODULE__{} = conn, type, key, val) when is_binary(val) do
-    Packet.build(conn.header, type, key, val)
+  def transmit(%__MODULE__{} = conn, type, key, val, options) when is_binary(val) do
+    Packet.build(conn.header, type, key, val, options)
     |> transmit(conn.sock)
   end
 
