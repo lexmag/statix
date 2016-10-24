@@ -44,7 +44,7 @@ defmodule Statix do
       for pipelining and easily wrapping existing code.
       """
       # TODO: Use `:erlang.monotonic_time/1` when we depend on Elixir ~> 1.2
-      def measure(key, fun, options \\ []) when is_function(fun, 0) do
+      def measure(key, options \\ [], fun) when is_function(fun, 0) do
         ts1 = :os.timestamp
         result = fun.()
         ts2 = :os.timestamp
@@ -60,8 +60,8 @@ defmodule Statix do
     end
   end
 
-  def transmit(conn, type, key, val,options \\ []) when is_binary(key) or is_list(key) do
-    if options[:sample_rate] || 1 >  :rand.uniform do
+  def transmit(conn, type, key, val, options \\ []) when is_binary(key) or is_list(key) do
+    if Keyword.get(options, :sample_rate, 1.0) >  :rand.uniform do
       Statix.Conn.transmit(conn, type, key, to_string(val), options)
     else
       :ok

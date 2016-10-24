@@ -124,10 +124,10 @@ defmodule StatixTest do
     assert_receive {:server, <<"sample:10", _, "|ms">>}
     assert fun_result == expected_result
 
-    fun_result = Sample.measure(["sample"], fn ->
+    fun_result = Sample.measure(["sample"], [sample_rate: 1.0, tags: ["foo:bar", "baz"]], fn ->
       :timer.sleep(100)
       expected_result
-    end,  sample_rate: 1.0, tags: ["foo:bar", "baz"])
+    end)
     assert_receive {:server, <<"sample:10", _, "|ms|@1.00|#foo:bar,baz">>}
 
   end
