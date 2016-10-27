@@ -43,8 +43,8 @@ defmodule Statix do
       It returns the result of the function call, making it suitable
       for pipelining and easily wrapping existing code.
       """
-      def measure(key, fun, args \\ []) when is_function(fun) do
-        {time, result} = :timer.tc(fun, args)
+      def measure(key, fun) when is_function(fun, 0) do
+        {time, result} = :timer.tc(fun)
 
         timing(key, div(time, 1000))
 

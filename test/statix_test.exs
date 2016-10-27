@@ -101,18 +101,6 @@ defmodule StatixTest do
     assert fun_result == expected_result
   end
 
-  test "measure/3" do
-    expected_result = "the stuff."
-
-    fun_result = Sample.measure(["sample"], fn(result) ->
-      :timer.sleep(100)
-      result
-    end, [expected_result])
-
-    assert_receive {:server, <<"sample:10", _, "|ms">>}
-    assert fun_result == expected_result
-  end
-
   test "set/2" do
     Sample.set(["sample"], 2)
     assert_receive {:server, "sample:2|s"}
