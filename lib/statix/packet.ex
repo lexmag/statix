@@ -36,11 +36,11 @@ defmodule Statix.Packet do
     packet
   end
 
-  defp set_option(packet, :sample_rate, sample_rate) do
+  defp set_option(packet, :sample_rate, sample_rate) when is_float(sample_rate) do
     [packet | ["|@", :erlang.float_to_binary(sample_rate, [:compact, decimals: 2])]]
   end
 
-  defp set_option(packet, :tags, tags) do
+  defp set_option(packet, :tags, tags) when is_list(tags) do
     [packet | ["|#", Enum.join(tags, ",")]]
   end
 end
