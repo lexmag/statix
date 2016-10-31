@@ -13,28 +13,23 @@ defmodule Statix do
       end
 
       def increment(key, val \\ "1", options \\ []) do
-        @statix_conn
-        |> Statix.transmit(:counter, key, val, options)
+        Statix.transmit(@statix_conn, :counter, key, val, options)
       end
 
       def decrement(key, val \\ "1", options \\ []) do
-        @statix_conn
-        |> Statix.transmit(:counter, key, [?-, to_string(val)], options)
+        Statix.transmit(@statix_conn, :counter, key, [?-, to_string(val)], options)
       end
 
       def gauge(key, val, options \\ [] ) do
-        @statix_conn
-        |> Statix.transmit(:gauge, key, val, options)
+        Statix.transmit(@statix_conn, :gauge, key, val, options)
       end
 
       def histogram(key, val, options \\ []) do
-        @statix_conn
-        |> Statix.transmit(:histogram, key, val, options)
+        Statix.transmit(@statix_conn, :histogram, key, val, options)
       end
 
       def timing(key, val, options \\ []) do
-        @statix_conn
-        |> Statix.transmit(:timing, key, val, options)
+        Statix.transmit(@statix_conn, :timing, key, val, options)
       end
 
       @doc """
@@ -52,8 +47,7 @@ defmodule Statix do
       end
 
       def set(key, val, options \\ []) do
-        @statix_conn
-        |> Statix.transmit(:set, key, val, options)
+        Statix.transmit(@statix_conn, :set, key, val, options)
       end
     end
   end
