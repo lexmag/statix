@@ -26,7 +26,17 @@ defmodule Statix do
           @statix_conn Statix.new_conn(__MODULE__)
 
           def connect() do
-            Statix.open_conn(@statix_conn)
+            conn = @statix_conn
+            current_conn = Statix.new_conn(__MODULE__)
+            if conn.header != current_conn.header do
+              message =
+                "the current configuration for #{inspect(__MODULE__)} differs from " <>
+                "the one that was given during the compilation.\n" <>
+                "Be sure to use :runtime_config option " <>
+                "if you want to have different configurations"
+              raise message
+            end
+            Statix.open_conn(conn)
             :ok
           end
 
