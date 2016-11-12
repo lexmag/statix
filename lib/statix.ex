@@ -12,11 +12,11 @@ defmodule Statix do
         :ok
       end
 
-      def increment(key, val \\ "1", options \\ []) do
+      def increment(key, val \\ 1, options \\ []) when is_number(val) do
         Statix.transmit(@statix_conn, :counter, key, val, options)
       end
 
-      def decrement(key, val \\ "1", options \\ []) do
+      def decrement(key, val \\ 1, options \\ []) when is_number(val) do
         Statix.transmit(@statix_conn, :counter, key, [?-, to_string(val)], options)
       end
 
@@ -52,7 +52,8 @@ defmodule Statix do
     end
   end
 
-  def transmit(conn, type, key, val, options \\ []) when is_binary(key) or is_list(key) do
+  def transmit(conn, type, key, val, options \\ [])
+      when (is_binary(key) or is_list(key)) and is_list(options) do
     if Keyword.get(options, :sample_rate, 1.0) >= :rand.uniform() do
       Statix.Conn.transmit(conn, type, key, to_string(val), options)
     else
