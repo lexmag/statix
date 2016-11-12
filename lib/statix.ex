@@ -1,35 +1,63 @@
 defmodule Statix do
-  defmacro __using__(_opts) do
-    quote location: :keep do
-      {host, port, prefix} = Statix.config(__MODULE__)
-      conn = Statix.Conn.new(host, port)
-      header = [conn.header | prefix]
-      @statix_conn %{conn | header: header, sock: __MODULE__}
+  alias __MODULE__.Conn
 
-      def connect() do
-        conn = Statix.Conn.open(@statix_conn)
-        Process.register(conn.sock, __MODULE__)
-        :ok
+  defmacro __using__(opts) do
+    current_conn =
+      if Keyword.get(opts, :runtime_config, false) do
+        quote do
+          @statix_header_key Module.concat(__MODULE__, :__statix_header__)
+
+          def connect() do
+            conn = Statix.new_conn(__MODULE__)
+            Application.put_env(:statix, @statix_header_key, conn.header)
+
+            Statix.open_conn(conn)
+            :ok
+          end
+
+          @compile {:inline, [current_conn: 0]}
+          defp current_conn() do
+            header = Application.fetch_env!(:statix, @statix_header_key)
+            %Statix.Conn{header: header, sock: __MODULE__}
+          end
+        end
+      else
+        quote do
+          @statix_conn Statix.new_conn(__MODULE__)
+
+          def connect() do
+            Statix.open_conn(@statix_conn)
+            :ok
+          end
+
+          @compile {:inline, [current_conn: 0]}
+          defp current_conn() do
+            @statix_conn
+          end
+        end
       end
 
+    quote location: :keep do
+      unquote(current_conn)
+
       def increment(key, val \\ 1, options \\ []) when is_number(val) do
-        Statix.transmit(@statix_conn, :counter, key, val, options)
+        Statix.transmit(current_conn(), :counter, key, val, options)
       end
 
       def decrement(key, val \\ 1, options \\ []) when is_number(val) do
-        Statix.transmit(@statix_conn, :counter, key, [?-, to_string(val)], options)
+        Statix.transmit(current_conn(), :counter, key, [?-, to_string(val)], options)
       end
 
       def gauge(key, val, options \\ [] ) do
-        Statix.transmit(@statix_conn, :gauge, key, val, options)
+        Statix.transmit(current_conn(), :gauge, key, val, options)
       end
 
       def histogram(key, val, options \\ []) do
-        Statix.transmit(@statix_conn, :histogram, key, val, options)
+        Statix.transmit(current_conn(), :histogram, key, val, options)
       end
 
       def timing(key, val, options \\ []) do
-        Statix.transmit(@statix_conn, :timing, key, val, options)
+        Statix.transmit(current_conn(), :timing, key, val, options)
       end
 
       @doc """
@@ -47,37 +75,44 @@ defmodule Statix do
       end
 
       def set(key, val, options \\ []) do
-        Statix.transmit(@statix_conn, :set, key, val, options)
+        Statix.transmit(current_conn(), :set, key, val, options)
       end
     end
+  end
+
+  def new_conn(module) do
+    {host, port, prefix} = load_config(module)
+    conn = Conn.new(host, port)
+    header = IO.iodata_to_binary([conn.header | prefix])
+    %{conn | header: header, sock: module}
+  end
+
+  def open_conn(%Conn{sock: module} = conn) do
+    conn = Conn.open(conn)
+    Process.register(conn.sock, module)
   end
 
   def transmit(conn, type, key, val, options \\ [])
       when (is_binary(key) or is_list(key)) and is_list(options) do
     if Keyword.get(options, :sample_rate, 1.0) >= :rand.uniform() do
-      Statix.Conn.transmit(conn, type, key, to_string(val), options)
+      Conn.transmit(conn, type, key, to_string(val), options)
     else
       :ok
     end
   end
 
-  def config(module) do
-    {prefix1, prefix2, env} = get_params(module)
-    {Keyword.get(env, :host, "127.0.0.1"),
-     Keyword.get(env, :port, 8125),
-     build_prefix(prefix1, prefix2)}
-  end
-
-  defp get_params(module) do
-    {env2, env1} = pull_env(module)
+  defp load_config(module) do
+    {env2, env1} =
+      Application.get_all_env(:statix)
+      |> Keyword.pop(module, [])
     {prefix1, env1} = Keyword.pop_first(env1, :prefix)
     {prefix2, env2} = Keyword.pop_first(env2, :prefix)
-    {prefix1, prefix2, Keyword.merge(env1, env2)}
-  end
+    env = Keyword.merge(env1, env2)
 
-  defp pull_env(module) do
-    Application.get_all_env(:statix)
-    |> Keyword.pop(module, [])
+    host = Keyword.get(env, :host, "127.0.0.1")
+    port = Keyword.get(env, :port, 8125)
+    prefix = build_prefix(prefix1, prefix2)
+    {host, port, prefix}
   end
 
   defp build_prefix(part1, part2) do

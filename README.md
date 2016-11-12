@@ -98,6 +98,15 @@ The defaults are:
 * host: `"127.0.0.1"`
 * port: `8125`
 
+__Note:__ by default, configuration is evaluated once, at compile time.
+If you plan using other configuration at runtime, you must specify the `:runtime_config` option:
+
+```elixir
+defmodule MyApp.Statix do
+  use Statix, runtime_config: true
+end
+```
+
 ## License
 
 This software is licensed under [the ISC license](LICENSE).
