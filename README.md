@@ -37,7 +37,7 @@ Then run `mix deps.get` in your shell to fetch the dependencies.
 
 ## Usage
 
-A module that uses Statix represents a socket connection:
+A module that uses Statix becomes a socket connection:
 
 ```elixir
 defmodule MyApp.Statix do
@@ -55,7 +55,7 @@ def start(_type, _args) do
 end
 ```
 
-Thereafter, the `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, `timing/2` and `measure/2` functions will be successfully pushing metrics to the server.
+Once the Statix connection is open, its `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, `timing/2` and `measure/2` functions can successfully be used to push metrics to the server.
 
 ### Sampling
 
