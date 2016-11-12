@@ -40,7 +40,7 @@ Then run `mix deps.get` in your shell to fetch the dependencies.
 A module that uses Statix represents a socket connection:
 
 ```elixir
-defmodule Sample.Statix do
+defmodule MyApp.Statix do
   use Statix
 end
 ```
@@ -50,12 +50,29 @@ In general, this function is called during the invocation of your application `s
 
 ```elixir
 def start(_type, _args) do
-  :ok = Sample.Statix.connect
+  :ok = MyApp.Statix.connect
   # ...
 end
 ```
 
 Thereafter, the `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, `timing/2` and `measure/2` functions will be successfully pushing metrics to the server.
+
+### Sampling
+
+```elixir
+MyApp.Statix.increment("page_view", 1, sample_rate: 0.5)
+```
+
+The UDP packet will only be sent to the server about half of the time,
+but resulting value will be adjusted on the server according to a sample rate.
+
+### Tags
+
+Tags are a way of adding dimensions to metrics:
+
+```elixir
+MyApp.Statix.gauge("memory", 1, tags: ["region:east"])
+```
 
 ### Configuration
 
@@ -71,7 +88,7 @@ config :statix,
 and on a per connection basis as well:
 
 ```elixir
-config :statix, Sample.Statix,
+config :statix, MyApp.Statix,
   port: 8811
 ```
 
