@@ -126,7 +126,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.decrement("open_connection", 1, [])
+      iex> MyApp.Statix.decrement("open_connections", 1, [])
       :ok
 
   """
