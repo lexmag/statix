@@ -3,12 +3,12 @@ defmodule Statix.Mixfile do
 
   def project() do
     [app: :statix,
+     name: "Statix",
      version: "1.0.0",
      elixir: "~> 1.2",
      description: description(),
      package: package(),
-     deps: deps(),
-     name: "Statix"]
+     deps: deps()]
   end
 
   def application() do

@@ -11,15 +11,26 @@ What makes Statix the fastest library around:
   * caching of the UDP packets header
   * usage of [IO lists](http://jlouisramblings.blogspot.se/2013/07/problematic-traits-in-erlang.html)
 
-<sup><a name="direct-sending"></a>[1]</sup> In contrast with process-based clients, Statix has lower memory consumption and higher throughput:
+<sup><a name="direct-sending"></a>[1]</sup> In contrast with process-based clients, Statix has lower memory consumption and higher throughput – Statix v1.0.0 does about __876640__ counter increments per flush:
 
-* Statix (v0.0.1): ~__554734__ counter increments per flush
+![Statix](https://www.dropbox.com/s/uijh5i8qgzmd11a/statix-v1.0.0.png?raw=1)
 
-![Statix](https://www.dropbox.com/s/9618kb09sc6cyh3/statix-v0.0.1.png?raw=1)
+<details>
+  <summary>It is possible to measure it yourself.</summary>
 
-* statsderl (v0.3.5): ~__21715__ counter increments per flush
+  ```elixir
+  for _ <- 1..10_000 do
+    Task.start(fn ->
+      for _ <- 1..10_000 do
+        StatixSample.increment("sample", 1)
+      end
+    end)
+  end
+  ```
 
-![statsderl](https://www.dropbox.com/s/wt96xmuywka9m4k/statsderl-v0.3.5.png?raw=1)
+  Make sure you have StatsD server running to get more realistic results.
+
+</details>
 
 ## Installation
 
