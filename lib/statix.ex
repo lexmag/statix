@@ -95,7 +95,7 @@ defmodule Statix do
   @callback connect() :: :ok
 
   @doc """
-  Increments the StatsD "counter" identified by `key` by the given `value`.
+  Increments the StatsD counter identified by `key` by the given `value`.
 
   `value` is supposed to be zero or positive and `c:decrement/3` should be
   used for negative values.
@@ -119,7 +119,7 @@ defmodule Statix do
   @callback increment(key, value :: number) :: on_send
 
   @doc """
-  Decrements the StatsD "counter" identified by `key` by the given `value`.
+  Decrements the StatsD counter identified by `key` by the given `value`.
 
   Works same as `c:increment/3` but subtracts `value` instead of adding it. For
   this reason `value` should be zero or negative.
@@ -178,7 +178,7 @@ defmodule Statix do
   @callback histogram(key, value :: String.Chars.t) :: on_send
 
   @doc """
-  Writes the given `value` to the StatsD "timing" identified by `key`.
+  Writes the given `value` to the StatsD timing identified by `key`.
 
   `value` is expected in milliseconds.
 
@@ -196,7 +196,7 @@ defmodule Statix do
   @callback timing(key, value :: String.Chars.t) :: on_send
 
   @doc """
-  Writes the given `value` to the StatsD "set" identified by `key`.
+  Writes the given `value` to the StatsD set identified by `key`.
 
   ## Examples
 
@@ -213,7 +213,7 @@ defmodule Statix do
 
   @doc """
   Measures the execution time of the given `function` and writes that to the
-  StatsD "timing" identified by `key`.
+  StatsD timing identified by `key`.
 
   This function returns the value returned by `function`, making it suitable for
   easily wrapping existing code.
