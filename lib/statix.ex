@@ -102,7 +102,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.increment("hits", 1, [])
+      iex> MyApp.Statix.increment("hit", 1, [])
       :ok
 
   """
@@ -126,7 +126,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.decrement("online_users", 1, [])
+      iex> MyApp.Statix.decrement("open_connection", 1, [])
       :ok
 
   """
@@ -147,7 +147,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.gauge("cpu_usage_percent", 0.83, [])
+      iex> MyApp.Statix.gauge("cpu_usage", 0.83, [])
       :ok
 
   """
@@ -166,7 +166,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.histogram("hist", 123, [])
+      iex> MyApp.Statix.histogram("online_users", 123, [])
       :ok
 
   """
@@ -200,7 +200,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.timing("unique_visitors", "user1", [])
+      iex> MyApp.Statix.set("unique_visitors", "user1", [])
       :ok
 
   """
@@ -220,7 +220,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.measure("Integer.to_string", [], fn -> Integer.to_string(123) end)
+      iex> MyApp.Statix.measure("integer_to_string", [], fn -> Integer.to_string(123) end)
       "123"
 
   """
