@@ -102,7 +102,7 @@ defmodule Statix do
 
   ## Examples
 
-      iex> MyApp.Statix.increment("hit", 1, [])
+      iex> MyApp.Statix.increment("hits", 1, [])
       :ok
 
   """
