@@ -78,14 +78,13 @@ defmodule Statix do
   In the example above, the UDP packet will only be sent to the server about
   half of the time, but the resulting value will be adjusted on the server
   according to the given sample rate.
-
   """
 
   alias __MODULE__.Conn
 
   @type key :: iodata
-  @type options :: [{:sample_rate, float}]
-  @type on_measurement :: :ok | {:error, term}
+  @type options :: [sample_rate: float, tags: [String.t]]
+  @type on_send :: :ok | {:error, term}
 
   @doc """
   Opens the connection to the StatsD-compatible server.
@@ -98,8 +97,7 @@ defmodule Statix do
   @doc """
   Increments the StatsD "counter" identified by `key` by the given `value`.
 
-  At each flush the current count for `key` is sent and the counter is reset to
-  `0`. `value` is supposed to be zero or positive and `c:decrement/3` should be
+  `value` is supposed to be zero or positive and `c:decrement/3` should be
   used for negative values.
 
   ## Examples
@@ -108,17 +106,17 @@ defmodule Statix do
       :ok
 
   """
-  @callback increment(key, value :: number, options) :: on_measurement
+  @callback increment(key, value :: number, options) :: on_send
 
   @doc """
   Same as `increment(key, 1, [])`.
   """
-  @callback increment(key) :: on_measurement
+  @callback increment(key) :: on_send
 
   @doc """
   Same as `increment(key, value, [])`.
   """
-  @callback increment(key, value :: number) :: on_measurement
+  @callback increment(key, value :: number) :: on_send
 
   @doc """
   Decrements the StatsD "counter" identified by `key` by the given `value`.
@@ -132,22 +130,20 @@ defmodule Statix do
       :ok
 
   """
-  @callback decrement(key, value :: number, options) :: on_measurement
+  @callback decrement(key, value :: number, options) :: on_send
 
   @doc """
   Same as `decrement(key, 1, [])`.
   """
-  @callback decrement(key) :: on_measurement
+  @callback decrement(key) :: on_send
 
   @doc """
   Same as `decrement(key, value, [])`.
   """
-  @callback decrement(key, value :: number) :: on_measurement
+  @callback decrement(key, value :: number) :: on_send
 
   @doc """
   Writes to the StatsD "gauge" identified by `key`.
-
-  Gauges are arbitrary values that can be recorded.
 
   ## Examples
 
@@ -155,19 +151,18 @@ defmodule Statix do
       :ok
 
   """
-  @callback gauge(key, value :: String.Chars.t, options) :: on_measurement
+  @callback gauge(key, value :: String.Chars.t, options) :: on_send
 
   @doc """
   Same as `gauge(key, value, [])`.
   """
-  @callback gauge(key, value :: String.Chars.t) :: on_measurement
+  @callback gauge(key, value :: String.Chars.t) :: on_send
 
   @doc """
   Writes `value` to the histogram identified by `key`.
 
-  Not all StatsD-compatible servers support histograms. An example of a
-  StatsD-compatible server that does support histograms is
-  [statsite](https://github.com/statsite/statsite).
+  Not all StatsD-compatible servers support histograms. An example of a such
+  server [statsite](https://github.com/statsite/statsite).
 
   ## Examples
 
@@ -175,12 +170,12 @@ defmodule Statix do
       :ok
 
   """
-  @callback histogram(key, value :: String.Chars.t, options) :: on_measurement
+  @callback histogram(key, value :: String.Chars.t, options) :: on_send
 
   @doc """
   Same as `histogram(key, value, [])`.
   """
-  @callback histogram(key, value :: String.Chars.t) :: on_measurement
+  @callback histogram(key, value :: String.Chars.t) :: on_send
 
   @doc """
   Writes the given `value` to the StatsD "timing" identified by `key`.
@@ -193,12 +188,12 @@ defmodule Statix do
       :ok
 
   """
-  @callback timing(key, value :: String.Chars.t, options) :: on_measurement
+  @callback timing(key, value :: String.Chars.t, options) :: on_send
 
   @doc """
   Same as `timing(key, value, [])`.
   """
-  @callback timing(key, value :: String.Chars.t) :: on_measurement
+  @callback timing(key, value :: String.Chars.t) :: on_send
 
   @doc """
   Writes the given `value` to the StatsD "set" identified by `key`.
@@ -209,19 +204,19 @@ defmodule Statix do
       :ok
 
   """
-  @callback set(key, value :: String.Chars.t, options) :: on_measurement
+  @callback set(key, value :: String.Chars.t, options) :: on_send
 
   @doc """
   Same as `set(key, value, [])`.
   """
-  @callback set(key, value :: String.Chars.t) :: on_measurement
+  @callback set(key, value :: String.Chars.t) :: on_send
 
   @doc """
   Measures the execution time of the given `function` and writes that to the
   StatsD "timing" identified by `key`.
 
   This function returns the value returned by `function`, making it suitable for
-  pipelining and easily wrapping existing code.
+  easily wrapping existing code.
 
   ## Examples
 
@@ -229,12 +224,12 @@ defmodule Statix do
       "123"
 
   """
-  @callback measure(key, options, function :: (() -> result)) :: result when result: term
+  @callback measure(key, options, function :: (() -> result)) :: result when result: var
 
   @doc """
   Same as `measure(key, [], function)`.
   """
-  @callback measure(key, function :: (() -> result)) :: result when result: term
+  @callback measure(key, function :: (() -> result)) :: result when result: var
 
   defmacro __using__(opts) do
     current_conn =
