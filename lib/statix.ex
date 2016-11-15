@@ -143,7 +143,7 @@ defmodule Statix do
   @callback decrement(key, value :: number) :: on_send
 
   @doc """
-  Writes to the StatsD "gauge" identified by `key`.
+  Writes to the StatsD gauge identified by `key`.
 
   ## Examples
 
