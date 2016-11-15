@@ -3,11 +3,12 @@ defmodule Statix.Mixfile do
 
   def project() do
     [app: :statix,
-     version: "0.8.0",
+     version: "1.0.0",
      elixir: "~> 1.2",
      description: description(),
      package: package(),
-     deps: deps()]
+     deps: deps(),
+     name: "Statix"]
   end
 
   def application() do
@@ -15,11 +16,11 @@ defmodule Statix.Mixfile do
   end
 
   defp description() do
-    "An Elixir client for StatsD compatible servers."
+    "Fast and reliable Elixir client for StatsD-compatible servers."
   end
 
   defp package() do
-    [maintainers: ["Aleksei Magusev"],
+    [maintainers: ["Aleksei Magusev", "Andrea Leopardi"],
      licenses: ["ISC"],
      links: %{"GitHub" => "https://github.com/lexmag/statix"}]
   end
