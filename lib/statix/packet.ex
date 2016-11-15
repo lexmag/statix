@@ -1,4 +1,6 @@
 defmodule Statix.Packet do
+  @moduledoc false
+
   use Bitwise
 
   otp_release = :erlang.system_info(:otp_release)

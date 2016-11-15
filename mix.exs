@@ -6,7 +6,8 @@ defmodule Statix.Mixfile do
      version: "0.8.0",
      elixir: "~> 1.2",
      description: description(),
-     package: package()]
+     package: package(),
+     deps: deps()]
   end
 
   def application() do
@@ -21,5 +22,9 @@ defmodule Statix.Mixfile do
     [maintainers: ["Aleksei Magusev"],
      licenses: ["ISC"],
      links: %{"GitHub" => "https://github.com/lexmag/statix"}]
+  end
+
+  defp deps() do
+    [{:ex_doc, ">= 0.0.0", only: :docs}]
   end
 end

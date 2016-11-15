@@ -1,5 +1,240 @@
 defmodule Statix do
+  @moduledoc """
+  Writer for [StatsD](https://github.com/etsy/statsd)-compatible servers.
+
+  To get started with Statix, you have to create a module that calls `use
+  Statix`, like this:
+
+      defmodule MyApp.Statix do
+        use Statix
+      end
+
+  This will make `MyApp.Statix` a Statix connection that implements the `Statix`
+  behaviour. This connection can be started with the `MyApp.Statix.connect/0`
+  function (see the `c:connect/0` callback) and a few functions can be called on
+  it to report metrics to the StatsD-compatible server read from the
+  configuration. Usually, `connect/0` is called in your application's
+  `c:Application.start/2` callback:
+
+      def start(_type, _args) do
+        MyApp.Statix.connect
+
+        # ...
+      end
+
+  ## Configuration
+
+  Statix can be configured either globally or on a per-connection basis.
+
+  The global configuration will affect all Statix connections created with
+  `use Statix`; it can be specified by configuring the `:statix` application:
+
+      config :statix,
+        prefix: "sample",
+        host: "stats.tld",
+        port: 8181
+
+  The per-connection configuration can be specified by configuring each specific
+  connection module under the `:statix` application:
+
+      config :statix, MyApp.Statix,
+        port: 8123
+
+  The following is a list of all the supported options:
+
+    * `:prefix` - (binary or `nil`) all metrics sent to the StatsD-compatible
+      server through the configured Statix connection will be prefixed with the
+      value of this option. If `nil`, metrics will not be prefixed. Defaults to
+      `nil`.
+    * `:host` - (binary) the host where the StatsD-compatible server lives.
+      Defaults to `"127.0.0.1"`.
+    * `:port` - (integer) the port (on `:host`) where the StatsD-compatible
+      server is running. Defaults to `8125`.
+
+  By default, the configuration is evaluated once, at compile time. If you plan
+  on changing the configuration at runtime, you must specify the
+  `:runtime_config` option to be `true` when calling `use Statix`:
+
+      defmodule MyApp.Statix do
+        use Statix, runtime_config: true
+      end
+
+  ## Tags
+
+  Tags are a way of adding dimensions to metrics:
+
+      MyApp.Statix.gauge("memory", 1, tags: ["region:east"])
+
+  In the example above, the `memory` measurement has been tagged with
+  `region:east`. Not all StatsD-compatible servers support this feature.
+
+  ## Sampling
+
+  All the callbacks from the `Statix` behaviour that accept options support
+  sampling via the `:sample_rate` option (see also the `t:options/0` type).
+
+      MyApp.Statix.increment("page_view", 1, sample_rate: 0.5)
+
+  In the example above, the UDP packet will only be sent to the server about
+  half of the time, but the resulting value will be adjusted on the server
+  according to the given sample rate.
+
+  """
+
   alias __MODULE__.Conn
+
+  @type key :: iodata
+  @type options :: [{:sample_rate, float}]
+  @type on_measurement :: :ok | {:error, term}
+
+  @doc """
+  Opens the connection to the StatsD-compatible server.
+
+  The configuration is read from the configuration for the `:statix` application
+  (both globally and per connection).
+  """
+  @callback connect() :: :ok
+
+  @doc """
+  Increments the StatsD "counter" identified by `key` by the given `value`.
+
+  At each flush the current count for `key` is sent and the counter is reset to
+  `0`. `value` is supposed to be zero or positive and `c:decrement/3` should be
+  used for negative values.
+
+  ## Examples
+
+      iex> MyApp.Statix.increment("hits", 1, [])
+      :ok
+
+  """
+  @callback increment(key, value :: number, options) :: on_measurement
+
+  @doc """
+  Same as `increment(key, 1, [])`.
+  """
+  @callback increment(key) :: on_measurement
+
+  @doc """
+  Same as `increment(key, value, [])`.
+  """
+  @callback increment(key, value :: number) :: on_measurement
+
+  @doc """
+  Decrements the StatsD "counter" identified by `key` by the given `value`.
+
+  Works same as `c:increment/3` but subtracts `value` instead of adding it. For
+  this reason `value` should be zero or negative.
+
+  ## Examples
+
+      iex> MyApp.Statix.decrement("online_users", 1, [])
+      :ok
+
+  """
+  @callback decrement(key, value :: number, options) :: on_measurement
+
+  @doc """
+  Same as `decrement(key, 1, [])`.
+  """
+  @callback decrement(key) :: on_measurement
+
+  @doc """
+  Same as `decrement(key, value, [])`.
+  """
+  @callback decrement(key, value :: number) :: on_measurement
+
+  @doc """
+  Writes to the StatsD "gauge" identified by `key`.
+
+  Gauges are arbitrary values that can be recorded.
+
+  ## Examples
+
+      iex> MyApp.Statix.gauge("cpu_usage_percent", 0.83, [])
+      :ok
+
+  """
+  @callback gauge(key, value :: String.Chars.t, options) :: on_measurement
+
+  @doc """
+  Same as `gauge(key, value, [])`.
+  """
+  @callback gauge(key, value :: String.Chars.t) :: on_measurement
+
+  @doc """
+  Writes `value` to the histogram identified by `key`.
+
+  Not all StatsD-compatible servers support histograms. An example of a
+  StatsD-compatible server that does support histograms is
+  [statsite](https://github.com/statsite/statsite).
+
+  ## Examples
+
+      iex> MyApp.Statix.histogram("hist", 123, [])
+      :ok
+
+  """
+  @callback histogram(key, value :: String.Chars.t, options) :: on_measurement
+
+  @doc """
+  Same as `histogram(key, value, [])`.
+  """
+  @callback histogram(key, value :: String.Chars.t) :: on_measurement
+
+  @doc """
+  Writes the given `value` to the StatsD "timing" identified by `key`.
+
+  `value` is expected in milliseconds.
+
+  ## Examples
+
+      iex> MyApp.Statix.timing("rendering", 12, [])
+      :ok
+
+  """
+  @callback timing(key, value :: String.Chars.t, options) :: on_measurement
+
+  @doc """
+  Same as `timing(key, value, [])`.
+  """
+  @callback timing(key, value :: String.Chars.t) :: on_measurement
+
+  @doc """
+  Writes the given `value` to the StatsD "set" identified by `key`.
+
+  ## Examples
+
+      iex> MyApp.Statix.timing("unique_visitors", "user1", [])
+      :ok
+
+  """
+  @callback set(key, value :: String.Chars.t, options) :: on_measurement
+
+  @doc """
+  Same as `set(key, value, [])`.
+  """
+  @callback set(key, value :: String.Chars.t) :: on_measurement
+
+  @doc """
+  Measures the execution time of the given `function` and writes that to the
+  StatsD "timing" identified by `key`.
+
+  This function returns the value returned by `function`, making it suitable for
+  pipelining and easily wrapping existing code.
+
+  ## Examples
+
+      iex> MyApp.Statix.measure("Integer.to_string", [], fn -> Integer.to_string(123) end)
+      "123"
+
+  """
+  @callback measure(key, options, function :: (() -> result)) :: result when result: term
+
+  @doc """
+  Same as `measure(key, [], function)`.
+  """
+  @callback measure(key, function :: (() -> result)) :: result when result: term
 
   defmacro __using__(opts) do
     current_conn =
@@ -48,6 +283,8 @@ defmodule Statix do
       end
 
     quote location: :keep do
+      @behaviour Statix
+
       unquote(current_conn)
 
       def increment(key, val \\ 1, options \\ []) when is_number(val) do
@@ -70,12 +307,6 @@ defmodule Statix do
         Statix.transmit(current_conn(), :timing, key, val, options)
       end
 
-      @doc """
-      Measure a function call.
-
-      It returns the result of the function call, making it suitable
-      for pipelining and easily wrapping existing code.
-      """
       def measure(key, options \\ [], fun) when is_function(fun, 0) do
         {elapsed, result} = :timer.tc(fun)
 
@@ -90,6 +321,7 @@ defmodule Statix do
     end
   end
 
+  @doc false
   def new_conn(module) do
     {host, port, prefix} = load_config(module)
     conn = Conn.new(host, port)
@@ -97,11 +329,13 @@ defmodule Statix do
     %{conn | header: header, sock: module}
   end
 
+  @doc false
   def open_conn(%Conn{sock: module} = conn) do
     conn = Conn.open(conn)
     Process.register(conn.sock, module)
   end
 
+  @doc false
   def transmit(conn, type, key, val, options \\ [])
       when (is_binary(key) or is_list(key)) and is_list(options) do
     if Keyword.get(options, :sample_rate, 1.0) >= :rand.uniform() do
