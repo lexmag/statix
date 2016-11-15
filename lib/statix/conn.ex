@@ -1,4 +1,6 @@
 defmodule Statix.Conn do
+  @moduledoc false
+
   defstruct [:sock, :header]
 
   alias Statix.Packet
