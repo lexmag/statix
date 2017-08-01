@@ -4,9 +4,14 @@ defmodule StatixTest do
   defmodule Server do
     def start(test, port) do
       {:ok, sock} = :gen_udp.open(port, [:binary, active: false])
-      Task.start_link(fn ->
+      {:ok, _} = Task.start_link(fn ->
         recv(test, sock)
       end)
+      sock
+    end
+
+    def stop(sock) do
+      :gen_udp.close(sock)
     end
 
     defp recv(test, sock) do
@@ -31,8 +36,12 @@ defmodule StatixTest do
   Module.create(StatixSample, content, Macro.Env.location(__ENV__))
 
   setup do
-    {:ok, _} = Server.start(self(), 8125)
+    sock = Server.start(self(), 8125)
     StatixSample.connect
+    on_exit fn ->
+      Server.stop(sock)
+    end
+    :ok
   end
 
   test "increment/1,2,3" do
