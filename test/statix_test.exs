@@ -167,7 +167,8 @@ defmodule StatixTest do
   end
 
   test "event/2,3" do
-    now_unix = DateTime.utc_now() |> DateTime.to_unix()
+    # a generic Unix time
+    now_unix = 1234
 
     StatixSample.event("sample title", "sample text")
     assert_receive {:server, "_e{12,11}:sample title|sample text"}
@@ -204,7 +205,8 @@ defmodule StatixTest do
   end
 
   test "service_check/2,3" do
-    now_unix = DateTime.utc_now() |> DateTime.to_unix()
+    # a generic Unix time
+    now_unix = 1234
 
     StatixSample.service_check("sample name", :ok)
     assert_receive {:server, "_sc|sample name|0"}
