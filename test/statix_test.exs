@@ -2,25 +2,28 @@ defmodule StatixTest do
   use ExUnit.Case
 
   defmodule Server do
-    def start(test, port) do
-      {:ok, sock} = :gen_udp.open(port, [:binary, active: false])
-      Task.start_link(fn ->
-        recv(test, sock)
-      end)
+    use GenServer
+
+    def start_link(port) do
+      GenServer.start_link(__MODULE__, port, name: __MODULE__)
     end
 
-    defp recv(test, sock) do
-      send(test, {:server, recv(sock)})
-      recv(test, sock)
+    def set_current_test(test) do
+      GenServer.call(__MODULE__, {:set_current_test, test})
     end
 
-    defp recv(sock) do
-      case :gen_udp.recv(sock, 0) do
-        {:ok, {_, _, packet}} ->
-          packet
-        {:error, _} = error ->
-          error
-      end
+    def init(port) do
+      {:ok, sock} = :gen_udp.open(port, [:binary, active: true])
+      {:ok, %{sock: sock, test: nil}}
+    end
+
+    def handle_call({:set_current_test, test}, _from, state) do
+      {:reply, :ok, %{state | test: test}}
+    end
+
+    def handle_info({:udp, sock, _, _, packet}, state=%{sock: sock, test: test}) do
+      send(test, {:server, packet})
+      {:noreply, state}
     end
   end
 
@@ -30,9 +33,15 @@ defmodule StatixTest do
   end
   Module.create(StatixSample, content, Macro.Env.location(__ENV__))
 
+  setup_all do
+    {:ok, _} = Server.start_link(8125)
+    :ok
+  end
+
   setup do
-    {:ok, _} = Server.start(self(), 8125)
+    Server.set_current_test(self())
     StatixSample.connect
+    :ok
   end
 
   test "increment/1,2,3" do
