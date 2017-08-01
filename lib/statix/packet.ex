@@ -18,8 +18,8 @@ defmodule Statix.Packet do
   end
 
   def build(header, :event, title, text, options) do
-    title_len = title |> String.length() |> Integer.to_string
-    text_len = text |> String.length() |> Integer.to_string
+    title_len = title |> String.length() |> Integer.to_string()
+    text_len = text |> String.length() |> Integer.to_string()
     [header, "_e{", title_len, ",", text_len, "}:", title, "|", text]
     |> set_ext_option("d", options[:timestamp])
     |> set_ext_option("h", options[:hostname])
