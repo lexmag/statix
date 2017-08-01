@@ -165,4 +165,68 @@ defmodule StatixTest do
 
     refute_received _any
   end
+
+  test "event/2,3" do
+    now_unix = DateTime.utc_now() |> DateTime.to_unix()
+
+    StatixSample.event("sample title", "sample text")
+    assert_receive {:server, "_e{12,11}:sample title|sample text"}
+
+    StatixSample.event("sample title", "sample text", timestamp: now_unix)
+    s = "_e{12,11}:sample title|sample text|d:#{now_unix}"
+    assert_receive {:server, ^s}
+
+    StatixSample.event("sample title", "sample text", hostname: "sample.hostname")
+    assert_receive {:server, "_e{12,11}:sample title|sample text|h:sample.hostname"}
+
+    StatixSample.event("sample title", "sample text", aggregation_key: "sample_aggregation_key")
+    assert_receive {:server, "_e{12,11}:sample title|sample text|k:sample_aggregation_key"}
+
+    StatixSample.event("sample title", "sample text", priority: :normal)
+    assert_receive {:server, "_e{12,11}:sample title|sample text|p:normal"}
+
+    StatixSample.event("sample title", "sample text", source_type_name: "sample source type")
+    assert_receive {:server, "_e{12,11}:sample title|sample text|s:sample source type"}
+
+    StatixSample.event("sample title", "sample text", alert_type: :warning)
+    assert_receive {:server, "_e{12,11}:sample title|sample text|t:warning"}
+
+    StatixSample.event("sample title", "sample text", tags: ["foo", "bar"])
+    assert_receive {:server, "_e{12,11}:sample title|sample text|#foo,bar"}
+
+    StatixSample.event("sample title", "sample text",
+      timestamp: now_unix, hostname: "H", aggregation_key: "K",
+      priority: :low, source_type_name: "S", alert_type: "T", tags: ["F", "B"])
+    s = "_e{12,11}:sample title|sample text|d:#{now_unix}|h:H|k:K|p:low|s:S|t:T|#F,B"
+    assert_receive {:server, ^s}
+
+    refute_received _any
+  end
+
+  test "service_check/2,3" do
+    now_unix = DateTime.utc_now() |> DateTime.to_unix()
+
+    StatixSample.service_check("sample name", :ok)
+    assert_receive {:server, "_sc|sample name|0"}
+
+    StatixSample.service_check("sample name", :ok, timestamp: now_unix)
+    s = "_sc|sample name|0|d:#{now_unix}"
+    assert_receive {:server, ^s}
+
+    StatixSample.service_check("sample name", :ok, hostname: "sample.hostname")
+    assert_receive {:server, "_sc|sample name|0|h:sample.hostname"}
+
+    StatixSample.service_check("sample name", :ok, tags: ["foo", "bar"])
+    assert_receive {:server, "_sc|sample name|0|#foo,bar"}
+
+    StatixSample.service_check("sample name", :ok, message: "sample message")
+    assert_receive {:server, "_sc|sample name|0|m:sample message"}
+
+    StatixSample.service_check("sample name", :warning,
+      timestamp: now_unix, hostname: "H", tags: ["F", "B"], message: "M")
+    s = "_sc|sample name|1|d:#{now_unix}|h:H|#F,B|m:M"
+    assert_receive {:server, ^s}
+
+    refute_received _any
+  end
 end
