@@ -11,7 +11,13 @@ defmodule StatixTest do
     end
 
     def stop(sock) do
-      :gen_udp.close(sock)
+      :ok = :gen_udp.close(sock)
+      # wait socket close
+      mref = :erlang.monitor(:port, sock)
+      receive do
+        {:"DOWN", ^mref, _, _, _} ->
+	        :ok
+      end
     end
 
     defp recv(test, sock) do
