@@ -70,6 +70,14 @@ defmodule StatixTest do
     def set(key, val, options) do
       super([key, "-overridden"], val, options)
     end
+
+    def event(title, text, options) do
+      super("#{title}-overridden", text, options)
+    end
+
+    def service_check(name, status, options) do
+      super("#{name}-overridden", status, options)
+    end
   end
 
   setup_all do
@@ -219,6 +227,82 @@ defmodule StatixTest do
     refute_received _any
   end
 
+  test "event/2,3" do
+    now_unix = DateTime.utc_now() |> DateTime.to_unix()
+
+    TestStatix.event("sample title", "sample text")
+    assert_receive {:server, "_e{12,11}:sample title|sample text"}
+
+    TestStatix.event("sample title", "sample text", timestamp: now_unix)
+    s = "_e{12,11}:sample title|sample text|d:#{now_unix}"
+    assert_receive {:server, ^s}
+
+    TestStatix.event("sample title", "sample text", hostname: "sample.hostname")
+    assert_receive {:server, "_e{12,11}:sample title|sample text|h:sample.hostname"}
+
+    TestStatix.event("sample title", "sample text", aggregation_key: "sample_aggregation_key")
+    assert_receive {:server, "_e{12,11}:sample title|sample text|k:sample_aggregation_key"}
+
+    TestStatix.event("sample title", "sample text", priority: :normal)
+    assert_receive {:server, "_e{12,11}:sample title|sample text|p:normal"}
+
+    TestStatix.event("sample title", "sample text", source_type_name: "sample source type")
+    assert_receive {:server, "_e{12,11}:sample title|sample text|s:sample source type"}
+
+    TestStatix.event("sample title", "sample text", alert_type: :warning)
+    assert_receive {:server, "_e{12,11}:sample title|sample text|t:warning"}
+
+    TestStatix.event("sample title", "sample text", tags: ["foo", "bar"])
+    assert_receive {:server, "_e{12,11}:sample title|sample text|#foo,bar"}
+
+    TestStatix.event("sample title", "sample text",
+      timestamp: now_unix,
+      hostname: "H",
+      aggregation_key: "K",
+      priority: :low,
+      source_type_name: "S",
+      alert_type: "T",
+      tags: ["F", "B"]
+    )
+
+    s = "_e{12,11}:sample title|sample text|d:#{now_unix}|h:H|k:K|p:low|s:S|t:T|#F,B"
+    assert_receive {:server, ^s}
+
+    refute_received _any
+  end
+
+  test "service_check/2,3" do
+    now_unix = DateTime.utc_now() |> DateTime.to_unix()
+
+    TestStatix.service_check("sample name", :ok)
+    assert_receive {:server, "_sc|sample name|0"}
+
+    TestStatix.service_check("sample name", :ok, timestamp: now_unix)
+    s = "_sc|sample name|0|d:#{now_unix}"
+    assert_receive {:server, ^s}
+
+    TestStatix.service_check("sample name", :ok, hostname: "sample.hostname")
+    assert_receive {:server, "_sc|sample name|0|h:sample.hostname"}
+
+    TestStatix.service_check("sample name", :ok, tags: ["foo", "bar"])
+    assert_receive {:server, "_sc|sample name|0|#foo,bar"}
+
+    TestStatix.service_check("sample name", :ok, message: "sample message")
+    assert_receive {:server, "_sc|sample name|0|m:sample message"}
+
+    TestStatix.service_check("sample name", :warning,
+      timestamp: now_unix,
+      hostname: "H",
+      tags: ["F", "B"],
+      message: "M"
+    )
+
+    s = "_sc|sample name|1|d:#{now_unix}|h:H|#F,B|m:M"
+    assert_receive {:server, ^s}
+
+    refute_received _any
+  end
+
   test "overridden callbacks" do
     OverridingStatix.increment("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample-overridden:3|c|#foo"}
@@ -243,6 +327,12 @@ defmodule StatixTest do
 
     OverridingStatix.set("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample-overridden:3|s|#foo"}
+
+    OverridingStatix.event("sample-title", "sample-text", tags: ["foo"])
+    assert_receive {:server, "_e{23,11}:sample-title-overridden|sample-text|#foo"}
+
+    OverridingStatix.service_check("sample-name", :ok, tags: ["foo"])
+    assert_receive {:server, "_sc|sample-name-overridden|0|#foo"}
   end
 
   test "sends global tags when present" do

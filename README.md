@@ -71,6 +71,8 @@ end
 
 Once the Statix connection is open, its `increment/1,2`, `decrement/1,2`, `gauge/2`, `set/2`, `timing/2`, and `measure/2` functions can be used to push metrics to the StatsD-compatible server.
 
+`event/2,3` and `service_check/2,3` are DataDog StatsD protocol extensions not supported by standard StatsD servers.
+
 ### Sampling
 
 Sampling is supported via the `:sample_rate` option:
@@ -81,6 +83,8 @@ MyApp.Statix.increment("page_view", 1, sample_rate: 0.5)
 
 The UDP packet will only be sent to the server about half of the time,
 but the resulting value will be adjusted on the server according to the given sample rate.
+
+NOTE: sampling is applied to all functions except `event/2,3` and `service_check/2,3`.
 
 ### Tags
 
