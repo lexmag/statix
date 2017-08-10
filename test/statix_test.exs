@@ -19,9 +19,9 @@ defmodule StatixTest do
 
     def handle_call({:set_current_test, current_test}, _from, %{test: test} = state) do
       if is_nil(test) or is_nil(current_test) do
-        {:reply, :ok, %{state | test: current_test}}      
+        {:reply, :ok, %{state | test: current_test}}
       else
-        {:reply, :error, state}      
+        {:reply, :error, state}
       end
     end
 
@@ -37,6 +37,38 @@ defmodule StatixTest do
   end
   Module.create(StatixSample, content, Macro.Env.location(__ENV__))
 
+  defmodule StatixOverridden do
+    use Statix, runtime_config: runtime_config?
+
+    def increment(key, val, options) do
+      super([key, "-overridden"], val, options)
+    end
+
+    def decrement(key, val, options) do
+      super([key, "-overridden"], val, options)
+    end
+
+    def gauge(key, val, options) do
+      super([key, "-overridden"], val, options)
+    end
+
+    def histogram(key, val, options) do
+      super([key, "-overridden"], val, options)
+    end
+
+    def timing(key, val, options) do
+      super([key, "-overridden"], val, options)
+    end
+
+    def measure(key, options, fun) do
+      super([key, "-measure"], options, fun)
+    end
+
+    def set(key, val, options) do
+      super([key, "-overridden"], val, options)
+    end
+  end
+
   setup_all do
     {:ok, _} = Server.start_link(8125)
     :ok
@@ -45,6 +77,7 @@ defmodule StatixTest do
   setup do
     :ok = Server.set_current_test(self())
     StatixSample.connect
+    StatixOverridden.connect
     on_exit(fn -> Server.set_current_test(nil) end)
   end
 
@@ -175,6 +208,137 @@ defmodule StatixTest do
     assert_receive {:server, "sample:3|s|@1.0|#foo,bar"}
 
     StatixSample.set("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "overridden increment/1,2,3" do
+    StatixOverridden.increment("sample")
+    assert_receive {:server, "sample-overridden:1|c"}
+
+    StatixOverridden.increment(["sample"], 2)
+    assert_receive {:server, "sample-overridden:2|c"}
+
+    StatixOverridden.increment("sample", 2.1)
+    assert_receive {:server, "sample-overridden:2.1|c"}
+
+    StatixOverridden.increment("sample", 3, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample-overridden:3|c|#foo:bar,baz"}
+
+    StatixOverridden.increment("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample-overridden:3|c|@1.0|#foo,bar"}
+
+    StatixOverridden.increment("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "overridden decrement/1,2,3" do
+    StatixOverridden.decrement("sample")
+    assert_receive {:server, "sample-overridden:-1|c"}
+
+    StatixOverridden.decrement(["sample"], 2)
+    assert_receive {:server, "sample-overridden:-2|c"}
+
+    StatixOverridden.decrement("sample", 2.1)
+    assert_receive {:server, "sample-overridden:-2.1|c"}
+
+    StatixOverridden.decrement("sample", 3, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample-overridden:-3|c|#foo:bar,baz"}
+    StatixOverridden.decrement("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+
+    assert_receive {:server, "sample-overridden:-3|c|@1.0|#foo,bar"}
+
+    StatixOverridden.decrement("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "overridden gauge/2,3" do
+    StatixOverridden.gauge(["sample"], 2)
+    assert_receive {:server, "sample-overridden:2|g"}
+
+    StatixOverridden.gauge("sample", 2.1)
+    assert_receive {:server, "sample-overridden:2.1|g"}
+
+    StatixOverridden.gauge("sample", 3, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample-overridden:3|g|#foo:bar,baz"}
+
+    StatixOverridden.gauge("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample-overridden:3|g|@1.0|#foo,bar"}
+
+    StatixOverridden.gauge("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "overridden histogram/2,3" do
+    StatixOverridden.histogram("sample", 2)
+    assert_receive {:server, "sample-overridden:2|h"}
+
+    StatixOverridden.histogram("sample", 2.1)
+    assert_receive {:server, "sample-overridden:2.1|h"}
+
+    StatixOverridden.histogram("sample", 3, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample-overridden:3|h|#foo:bar,baz"}
+
+    StatixOverridden.histogram("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample-overridden:3|h|@1.0|#foo,bar"}
+
+    StatixOverridden.histogram("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "overridden timing/2,3" do
+    StatixOverridden.timing(["sample"], 2)
+    assert_receive {:server, "sample-overridden:2|ms"}
+
+    StatixOverridden.timing("sample", 2.1)
+    assert_receive {:server, "sample-overridden:2.1|ms"}
+
+    StatixOverridden.timing("sample", 3, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample-overridden:3|ms|#foo:bar,baz"}
+
+    StatixOverridden.timing("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample-overridden:3|ms|@1.0|#foo,bar"}
+
+    StatixOverridden.timing("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "overridden measure/2,3" do
+    expected = "the stuff"
+    result = StatixOverridden.measure(["sample"], fn ->
+      :timer.sleep(100)
+      expected
+    end)
+    assert_receive {:server, <<"sample-measure-overridden:10", _, "|ms">>}
+    assert result == expected
+
+    StatixOverridden.measure("sample", [sample_rate: 1.0, tags: ["foo", "bar"]], fn ->
+      :timer.sleep(100)
+    end)
+    assert_receive {:server, <<"sample-measure-overridden:10", _, "|ms|@1.0|#foo,bar">>}
+
+    refute_received _any
+  end
+
+  test "overridden set/2,3" do
+    StatixOverridden.set(["sample"], 2)
+    assert_receive {:server, "sample-overridden:2|s"}
+
+    StatixOverridden.set("sample", 2.1)
+    assert_receive {:server, "sample-overridden:2.1|s"}
+
+    StatixOverridden.set("sample", 3, tags: ["foo:bar", "baz"])
+    assert_receive {:server, "sample-overridden:3|s|#foo:bar,baz"}
+
+    StatixOverridden.set("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
+    assert_receive {:server, "sample-overridden:3|s|@1.0|#foo,bar"}
+
+    StatixOverridden.set("sample", 3, sample_rate: 0.0)
 
     refute_received _any
   end

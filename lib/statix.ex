@@ -313,6 +313,8 @@ defmodule Statix do
       def set(key, val, options \\ []) do
         Statix.transmit(current_conn(), :set, key, val, options)
       end
+
+      defoverridable [increment: 3, decrement: 3, gauge: 3, histogram: 3, timing: 3, measure: 3, set: 3]
     end
   end
 
