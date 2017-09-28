@@ -6,7 +6,7 @@ defmodule Statix.Conn do
   alias Statix.Packet
 
   def new(host, port) when is_binary(host) do
-    new(String.to_char_list(host), port)
+    new(String.to_charlist(host), port)
   end
 
   def new(host, port) when is_list(host) or is_tuple(host) do
