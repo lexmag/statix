@@ -6,7 +6,7 @@ defmodule Statix.Conn do
   alias Statix.Packet
 
   def new(host, port) when is_binary(host) do
-    new(String.to_char_list(host), port)
+    new(string_to_charlist(host), port)
   end
 
   def new(host, port) when is_list(host) or is_tuple(host) do
@@ -31,5 +31,11 @@ defmodule Statix.Conn do
     receive do
       {:inet_reply, _port, status} -> status
     end
+  end
+  
+  if Version.match?(System.version(), ">= 1.3.0") do
+    defp string_to_charlist(string), do: String.to_charlist(string)
+  else
+    defp string_to_charlist(string), do: String.to_char_list(string)
   end
 end
