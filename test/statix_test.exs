@@ -18,7 +18,7 @@ defmodule StatixTest do
     end
 
     def handle_call({:set_current_test, current_test}, _from, %{test: test} = state) do
-      if is_nil(test) do
+      if is_nil(test) or is_nil(current_test) do
         {:reply, :ok, %{state | test: current_test}}      
       else
         {:reply, :error, state}      
