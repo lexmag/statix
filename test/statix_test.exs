@@ -13,15 +13,19 @@ defmodule StatixTest do
     end
 
     def init(port) do
-      {:ok, sock} = :gen_udp.open(port, [:binary, active: true])
-      {:ok, %{sock: sock, test: nil}}
+      {:ok, socket} = :gen_udp.open(port, [:binary, active: true])
+      {:ok, %{socket: socket, test: nil}}
     end
 
-    def handle_call({:set_current_test, test}, _from, state) do
-      {:reply, :ok, %{state | test: test}}
+    def handle_call({:set_current_test, current_test}, _from, %{test: test} = state) do
+      if is_nil(test) do
+        {:reply, :ok, %{state | test: current_test}}      
+      else
+        {:reply, :error, state}      
+      end
     end
 
-    def handle_info({:udp, sock, _, _, packet}, state=%{sock: sock, test: test}) do
+    def handle_info({:udp, socket, _, _, packet}, %{socket: socket, test: test} = state) do
       send(test, {:server, packet})
       {:noreply, state}
     end
@@ -39,9 +43,9 @@ defmodule StatixTest do
   end
 
   setup do
-    Server.set_current_test(self())
+    :ok = Server.set_current_test(self())
     StatixSample.connect
-    :ok
+    on_exit(fn -> Server.set_current_test(nil) end)
   end
 
   test "increment/1,2,3" do
