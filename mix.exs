@@ -2,13 +2,15 @@ defmodule Statix.Mixfile do
   use Mix.Project
 
   def project() do
-    [app: :statix,
-     name: "Statix",
-     version: "1.0.0",
-     elixir: "~> 1.2",
-     description: description(),
-     package: package(),
-     deps: deps()]
+    [
+      app: :statix,
+      name: "Statix",
+      version: "1.0.1",
+      elixir: "~> 1.2",
+      description: description(),
+      package: package(),
+      deps: deps(),
+    ]
   end
 
   def application() do
@@ -20,9 +22,11 @@ defmodule Statix.Mixfile do
   end
 
   defp package() do
-    [maintainers: ["Aleksei Magusev", "Andrea Leopardi"],
-     licenses: ["ISC"],
-     links: %{"GitHub" => "https://github.com/lexmag/statix"}]
+    [
+      maintainers: ["Aleksei Magusev", "Andrea Leopardi"],
+      licenses: ["ISC"],
+      links: %{"GitHub" => "https://github.com/lexmag/statix"},
+    ]
   end
 
   defp deps() do
