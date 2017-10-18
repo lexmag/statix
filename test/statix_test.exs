@@ -78,6 +78,7 @@ defmodule StatixTest do
     :ok = Server.set_current_test(self())
     TestStatix.connect
     OverridingStatix.connect
+    Application.put_env(:statix, :tags, nil)
     on_exit(fn -> Server.set_current_test(nil) end)
   end
 
@@ -236,4 +237,15 @@ defmodule StatixTest do
     OverridingStatix.set("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample-overridden:3|s|#foo"}
   end
+
+  test "sends global tags when present" do
+    Application.put_env(:statix, :tags, ["tag:test"])
+
+    TestStatix.increment("sample", 3)
+    assert_receive {:server, "sample:3|c|#tag:test"}
+
+    TestStatix.increment("sample", 3, tags: ["foo"])
+    assert_receive {:server, "sample:3|c|#foo,tag:test"}
+  end
+
 end
