@@ -78,7 +78,7 @@ defmodule StatixTest do
     :ok = Server.set_current_test(self())
     TestStatix.connect
     OverridingStatix.connect
-    Application.put_env(:statix, :tags, nil)
+    Application.delete_env(:statix, :tags)
     on_exit(fn -> Server.set_current_test(nil) end)
   end
 

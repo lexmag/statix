@@ -369,16 +369,8 @@ defmodule Statix do
   end
 
   defp add_global_tags(options) do
-    global_tags = Application.get_env(:statix, :tags)
-    options_tags = Keyword.get(options, :tags)
-
-    new_tags = cond do
-      options_tags && global_tags -> options_tags ++ global_tags
-      global_tags -> global_tags
-      true -> nil
-    end
-
-    if new_tags, do: Keyword.put(options, :tags, new_tags), else: options
+    global_tags = Application.get_env(:statix, :tags, [])
+    Keyword.update(options, :tags, global_tags, &(&1 ++ global_tags))
   end
 
 end
