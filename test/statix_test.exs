@@ -248,4 +248,14 @@ defmodule StatixTest do
     assert_receive {:server, "sample:3|c|#foo,tag:test"}
   end
 
+  test "sends global backend-specific tags" do
+    Application.put_env(:statix, TestStatix, tags: ["tag:test"])
+
+    TestStatix.increment("sample", 3)
+    assert_receive {:server, "sample:3|c|#tag:test"}
+
+    TestStatix.increment("sample", 3, tags: ["foo"])
+    assert_receive {:server, "sample:3|c|#foo,tag:test"}
+  end
+
 end

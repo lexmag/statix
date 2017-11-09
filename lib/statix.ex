@@ -339,7 +339,7 @@ defmodule Statix do
       when (is_binary(key) or is_list(key)) and is_list(options) do
     sample_rate = Keyword.get(options, :sample_rate)
     if is_nil(sample_rate) or sample_rate >= :rand.uniform() do
-      Conn.transmit(conn, type, key, to_string(val), add_global_tags(options))
+      Conn.transmit(conn, type, key, to_string(val), add_global_tags(conn.sock, options))
     else
       :ok
     end
@@ -368,8 +368,16 @@ defmodule Statix do
     end
   end
 
-  defp add_global_tags(options) do
-    global_tags = Application.get_env(:statix, :tags, [])
+  defp add_global_tags(module, options) do
+    backend_tags =
+      :statix
+      |> Application.get_env(module, [])
+      |> Keyword.get(:tags, [])
+
+    application_tags = Application.get_env(:statix, :tags, [])
+
+    global_tags = backend_tags ++ application_tags
+
     Keyword.update(options, :tags, global_tags, &(&1 ++ global_tags))
   end
 
