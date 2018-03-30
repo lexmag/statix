@@ -79,6 +79,12 @@ Sampling is supported via the `:sample_rate` option:
 MyApp.Statix.increment("page_view", 1, sample_rate: 0.5)
 ```
 
+Or by setting global `:sample_rate` in config:
+```elixir
+config :statix,
+  sample_rate: 0.1
+```
+
 The UDP packet will only be sent to the server about half of the time,
 but the resulting value will be adjusted on the server according to the given sample rate.
 

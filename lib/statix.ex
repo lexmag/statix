@@ -337,6 +337,7 @@ defmodule Statix do
       when (is_binary(key) or is_list(key)) and is_list(options) do
     sample_rate = Keyword.get(options, :sample_rate, Application.get_env(:statix, :sample_rate))
     if is_nil(sample_rate) or sample_rate >= :rand.uniform() do
+      options = Keyword.put_new(options, :sample_rate, sample_rate)
       Conn.transmit(conn, type, key, to_string(val), options)
     else
       :ok
