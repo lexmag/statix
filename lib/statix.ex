@@ -42,11 +42,10 @@ defmodule Statix do
 
   The following is a list of all the supported options:
 
-    * `:prefix` - (binary or `nil`) all metrics sent to the StatsD-compatible
+    * `:prefix` - (binary) all metrics sent to the StatsD-compatible
       server through the configured Statix connection will be prefixed with the
-      value of this option. If `nil`, metrics will not be prefixed. Defaults to
-      `nil`.
-    * `:host` - (binary) the host where the StatsD-compatible server lives.
+      value of this option. By default this option is not present.
+    * `:host` - (binary) the host where the StatsD-compatible server is running.
       Defaults to `"127.0.0.1"`.
     * `:port` - (integer) the port (on `:host`) where the StatsD-compatible
       server is running. Defaults to `8125`.
