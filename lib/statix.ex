@@ -51,7 +51,7 @@ defmodule Statix do
     * `:port` - (integer) the port (on `:host`) where the StatsD-compatible
       server is running. Defaults to `8125`.
     * `:tags` - ([binary]) a list of global tags that will be sent with all
-      metrics. If `nil`, no global tags will be set. Defaults to `nil`.
+      metrics. By default this option is not present.
 
   By default, the configuration is evaluated once, at compile time. If you plan
   on changing the configuration at runtime, you must specify the
@@ -339,7 +339,7 @@ defmodule Statix do
       when (is_binary(key) or is_list(key)) and is_list(options) do
     sample_rate = Keyword.get(options, :sample_rate)
     if is_nil(sample_rate) or sample_rate >= :rand.uniform() do
-      Conn.transmit(conn, type, key, to_string(val), add_global_tags(conn.sock, options))
+      Conn.transmit(conn, type, key, to_string(val), put_global_tags(conn.sock, options))
     else
       :ok
     end
@@ -368,15 +368,14 @@ defmodule Statix do
     end
   end
 
-  defp add_global_tags(module, options) do
-    backend_tags =
+  defp put_global_tags(module, options) do
+    conn_tags =
       :statix
       |> Application.get_env(module, [])
       |> Keyword.get(:tags, [])
 
-    application_tags = Application.get_env(:statix, :tags, [])
-
-    global_tags = backend_tags ++ application_tags
+    app_tags = Application.get_env(:statix, :tags, [])
+    global_tags = conn_tags ++ app_tags
 
     Keyword.update(options, :tags, global_tags, &(&1 ++ global_tags))
   end
