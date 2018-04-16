@@ -78,8 +78,6 @@ defmodule StatixTest do
     :ok = Server.set_current_test(self())
     TestStatix.connect
     OverridingStatix.connect
-    Application.delete_env(:statix, :tags)
-    Application.delete_env(:statix, TestStatix)
     on_exit(fn -> Server.set_current_test(nil) end)
   end
 
@@ -247,9 +245,11 @@ defmodule StatixTest do
 
     TestStatix.increment("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample:3|c|#foo,tag:test"}
+  after
+    Application.delete_env(:statix, :tags)
   end
 
-  test "sends global backend-specific tags" do
+  test "sends global connection-specific tags" do
     Application.put_env(:statix, TestStatix, tags: ["tag:test"])
 
     TestStatix.increment("sample", 3)
@@ -257,6 +257,7 @@ defmodule StatixTest do
 
     TestStatix.increment("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample:3|c|#foo,tag:test"}
+  after
+    Application.delete_env(:statix, TestStatix)
   end
-
 end
