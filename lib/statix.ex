@@ -379,5 +379,4 @@ defmodule Statix do
 
     Keyword.update(options, :tags, global_tags, &(&1 ++ global_tags))
   end
-
 end
