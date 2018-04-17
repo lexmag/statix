@@ -119,6 +119,7 @@ The defaults are:
 * prefix: `nil`
 * host: `"127.0.0.1"`
 * port: `8125`
+* sample_rate: `1.0`
 
 __Note:__ by default, configuration is evaluated once, at compile time.
 If you plan using other configuration at runtime, you must specify the `:runtime_config` option:
