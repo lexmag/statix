@@ -1,5 +1,6 @@
 defmodule StatixTest do
   use ExUnit.Case
+  import ExUnit.CaptureLog
 
   defmodule Server do
     use GenServer
@@ -34,6 +35,11 @@ defmodule StatixTest do
   runtime_config? = System.get_env("STATIX_TEST_RUNTIME_CONFIG") in ["1", "true"]
   content = quote do
     use Statix, runtime_config: unquote(runtime_config?)
+
+    def close_port do
+      %Statix.Conn{sock: sock} = current_conn()
+      Port.close(sock)
+    end
   end
   Module.create(TestStatix, content, Macro.Env.location(__ENV__))
 
@@ -235,5 +241,29 @@ defmodule StatixTest do
 
     OverridingStatix.set("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample-overridden:3|s|#foo"}
+  end
+
+  test "port closed" do
+    TestStatix.close_port()
+
+    assert capture_log(fn ->
+      assert {:error, :port_closed} == TestStatix.increment("sample")
+    end) =~ "counter metric \"sample\" lost value 1 due to port closure"
+
+    assert capture_log(fn ->
+      assert {:error, :port_closed} == TestStatix.decrement("sample")
+    end) =~ "counter metric \"sample\" lost value -1 due to port closure"
+
+    assert capture_log(fn ->
+      assert {:error, :port_closed} == TestStatix.gauge("sample", 2)
+    end) =~ "gauge metric \"sample\" lost value 2 due to port closure"
+
+    assert capture_log(fn ->
+      assert {:error, :port_closed} == TestStatix.histogram("sample", 3)
+    end) =~ "histogram metric \"sample\" lost value 3 due to port closure"
+
+    assert capture_log(fn ->
+      assert {:error, :port_closed} == TestStatix.timing("sample", 2.5)
+    end) =~ "timing metric \"sample\" lost value 2.5 due to port closure"
   end
 end
