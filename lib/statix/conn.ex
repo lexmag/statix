@@ -26,7 +26,7 @@ defmodule Statix.Conn do
     |> transmit(conn.sock)
   end
 
-  defp transmit(packet, sock) do
+  def transmit(packet, sock) do
     Port.command(sock, packet)
 
     receive do
