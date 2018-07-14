@@ -1,18 +1,18 @@
 defmodule Statix.Conn do
   @moduledoc false
 
-  defstruct [:sock, :header]
+  defstruct [:sock, :header, :sample_rate]
 
   alias Statix.Packet
 
-  def new(host, port) when is_binary(host) do
-    new(string_to_charlist(host), port)
+  def new(host, port, sample_rate) when is_binary(host) do
+    new(string_to_charlist(host), port, sample_rate)
   end
 
-  def new(host, port) when is_list(host) or is_tuple(host) do
+  def new(host, port, sample_rate) when is_list(host) or is_tuple(host) do
     {:ok, addr} = :inet.getaddr(host, :inet)
     header = Packet.header(addr, port)
-    %__MODULE__{header: header}
+    %__MODULE__{header: header, sample_rate: sample_rate}
   end
 
   def open(%__MODULE__{} = conn) do
@@ -32,7 +32,7 @@ defmodule Statix.Conn do
       {:inet_reply, _port, status} -> status
     end
   end
-  
+
   if Version.match?(System.version(), ">= 1.3.0") do
     defp string_to_charlist(string), do: String.to_charlist(string)
   else
