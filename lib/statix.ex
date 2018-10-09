@@ -331,9 +331,18 @@ defmodule Statix do
 
   @doc false
   def new_conn(module) do
-    {host, port, prefix} = load_config(module)
-    conn = Conn.new(host, port)
+    {conn, prefix} =
+      case load_config(module) do
+        {:inet, {host, port, prefix}} ->
+          conn = Conn.new(host, port)
+          {conn, prefix}
+
+        {:local, {socket_path, prefix}} ->
+          {Conn.new(:local, socket_path), prefix}
+      end
+
     header = IO.iodata_to_binary([conn.header | prefix])
+
     %{conn | header: header, sock: module}
   end
 
@@ -362,12 +371,16 @@ defmodule Statix do
 
     {prefix1, env1} = Keyword.pop_first(env1, :prefix)
     {prefix2, env2} = Keyword.pop_first(env2, :prefix)
+    prefix = build_prefix(prefix1, prefix2)
     env = Keyword.merge(env1, env2)
 
-    host = Keyword.get(env, :host, "127.0.0.1")
-    port = Keyword.get(env, :port, 8125)
-    prefix = build_prefix(prefix1, prefix2)
-    {host, port, prefix}
+    if env[:local] do
+      {:local, {env[:socket_path], prefix}}
+    else
+      host = Keyword.get(env, :host, "127.0.0.1")
+      port = Keyword.get(env, :port, 8125)
+      {:inet, {host, port, prefix}}
+    end
   end
 
   defp build_prefix(part1, part2) do

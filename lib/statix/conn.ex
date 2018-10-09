@@ -1,11 +1,16 @@
 defmodule Statix.Conn do
   @moduledoc false
 
-  defstruct [:sock, :header]
+  defstruct [:sock, :header, :type]
 
   alias Statix.Packet
 
   require Logger
+
+  def new(:local, path) do
+    header = Packet.header(:local, path)
+    %__MODULE__{header: header, type: :local}
+  end
 
   def new(host, port) when is_binary(host) do
     new(string_to_charlist(host), port)
@@ -13,11 +18,16 @@ defmodule Statix.Conn do
 
   def new(host, port) when is_list(host) or is_tuple(host) do
     {:ok, addr} = :inet.getaddr(host, :inet)
-    header = Packet.header(addr, port)
-    %__MODULE__{header: header}
+    header = Packet.header(:inet, addr, port)
+    %__MODULE__{header: header, type: :inet}
   end
 
-  def open(%__MODULE__{} = conn) do
+  def open(%__MODULE__{type: :inet} = conn) do
+    {:ok, sock} = :gen_udp.open(0, [:local, active: false])
+    %__MODULE__{conn | sock: sock}
+  end
+
+  def open(%__MODULE__{type: :local} = conn) do
     {:ok, sock} = :gen_udp.open(0, active: false)
     %__MODULE__{conn | sock: sock}
   end
