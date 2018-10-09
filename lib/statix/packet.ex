@@ -5,8 +5,9 @@ defmodule Statix.Packet do
 
   otp_release = :erlang.system_info(:otp_release)
   @addr_family if(otp_release >= '19', do: [1], else: [])
+  @inet_local [5]
 
-  def header({n1, n2, n3, n4}, port) do
+  def header(:inet, {n1, n2, n3, n4}, port) do
     @addr_family ++
       [
         band(bsr(port, 8), 0xFF),
@@ -15,6 +16,14 @@ defmodule Statix.Packet do
         band(n2, 0xFF),
         band(n3, 0xFF),
         band(n4, 0xFF)
+      ]
+  end
+
+  def header(:local, socket_path) do
+    @inet_local ++
+      [
+        byte_size(socket_path),
+        socket_path
       ]
   end
 
