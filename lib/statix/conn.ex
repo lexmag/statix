@@ -23,12 +23,12 @@ defmodule Statix.Conn do
   end
 
   def open(%__MODULE__{type: :inet} = conn) do
-    {:ok, sock} = :gen_udp.open(0, [:local, active: false])
+    {:ok, sock} = :gen_udp.open(0, active: false)
     %__MODULE__{conn | sock: sock}
   end
 
   def open(%__MODULE__{type: :local} = conn) do
-    {:ok, sock} = :gen_udp.open(0, active: false)
+    {:ok, sock} = :gen_udp.open(0, [:local, active: false])
     %__MODULE__{conn | sock: sock}
   end
 
