@@ -259,13 +259,12 @@ defmodule Statix do
             current_conn = Statix.new_conn(__MODULE__)
 
             if conn.header != current_conn.header do
-              message =
+              raise(
                 "the current configuration for #{inspect(__MODULE__)} differs from " <>
                   "the one that was given during the compilation.\n" <>
                   "Be sure to use :runtime_config option " <>
                   "if you want to have different configurations"
-
-              raise message
+              )
             end
 
             Statix.open_conn(conn)
@@ -316,13 +315,15 @@ defmodule Statix do
         Statix.transmit(current_conn(), :set, key, val, options)
       end
 
-      defoverridable increment: 3,
-                     decrement: 3,
-                     gauge: 3,
-                     histogram: 3,
-                     timing: 3,
-                     measure: 3,
-                     set: 3
+      defoverridable(
+        increment: 3,
+        decrement: 3,
+        gauge: 3,
+        histogram: 3,
+        timing: 3,
+        measure: 3,
+        set: 3
+      )
     end
   end
 
