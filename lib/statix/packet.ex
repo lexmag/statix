@@ -44,6 +44,8 @@ defmodule Statix.Packet do
     [packet | ["|@", :erlang.float_to_binary(sample_rate, [:compact, decimals: 2])]]
   end
 
+  defp set_option(packet, :tags, []), do: packet
+
   defp set_option(packet, :tags, tags) when is_list(tags) do
     [packet | ["|#", Enum.join(tags, ",")]]
   end
