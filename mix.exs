@@ -9,7 +9,7 @@ defmodule Statix.Mixfile do
       elixir: "~> 1.2",
       description: description(),
       package: package(),
-      deps: deps(),
+      deps: deps()
     ]
   end
 
@@ -25,7 +25,7 @@ defmodule Statix.Mixfile do
     [
       maintainers: ["Aleksei Magusev", "Andrea Leopardi"],
       licenses: ["ISC"],
-      links: %{"GitHub" => "https://github.com/lexmag/statix"},
+      links: %{"GitHub" => "https://github.com/lexmag/statix"}
     ]
   end
 
