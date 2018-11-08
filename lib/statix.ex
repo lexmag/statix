@@ -17,7 +17,7 @@ defmodule Statix do
   `c:Application.start/2` callback:
 
       def start(_type, _args) do
-        MyApp.Statix.connect
+        :ok = MyApp.Statix.connect()
 
         # ...
       end

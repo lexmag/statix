@@ -64,7 +64,7 @@ In general, this function is called when your application starts (for example, i
 
 ```elixir
 def start(_type, _args) do
-  :ok = MyApp.Statix.connect
+  :ok = MyApp.Statix.connect()
   # ...
 end
 ```
