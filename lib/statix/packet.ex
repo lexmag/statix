@@ -21,6 +21,7 @@ defmodule Statix.Packet do
   def build(header, :event, title, text, options) do
     title_len = title |> String.length() |> Integer.to_string()
     text_len = text |> String.length() |> Integer.to_string()
+
     [header, "_e{", title_len, ",", text_len, "}:", title, "|", text]
     |> set_ext_option("d", options[:timestamp])
     |> set_ext_option("h", options[:hostname])
@@ -89,6 +90,7 @@ defmodule Statix.Packet do
         "unknown" -> ?3
         _ -> ?3
       end
+
     [packet | [?|, stat]]
   end
 end
