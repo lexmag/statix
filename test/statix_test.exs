@@ -33,14 +33,17 @@ defmodule StatixTest do
   end
 
   runtime_config? = System.get_env("STATIX_TEST_RUNTIME_CONFIG") in ["1", "true"]
-  content = quote do
-    use Statix, runtime_config: unquote(runtime_config?)
 
-    def close_port do
-      %Statix.Conn{sock: sock} = current_conn()
-      Port.close(sock)
+  content = 
+    quote do
+      use Statix, runtime_config: unquote(runtime_config?)
+
+      def close_port do
+        %Statix.Conn{sock: sock} = current_conn()
+        Port.close(sock)
+      end
     end
-  end
+
   Module.create(TestStatix, content, Macro.Env.location(__ENV__))
 
   defmodule OverridingStatix do
@@ -82,8 +85,8 @@ defmodule StatixTest do
 
   setup do
     :ok = Server.set_current_test(self())
-    TestStatix.connect
-    OverridingStatix.connect
+    TestStatix.connect()
+    OverridingStatix.connect()
     on_exit(fn -> Server.set_current_test(nil) end)
   end
 
@@ -185,16 +188,20 @@ defmodule StatixTest do
 
   test "measure/2,3" do
     expected = "the stuff"
-    result = TestStatix.measure(["sample"], fn ->
-      :timer.sleep(100)
-      expected
-    end)
+
+    result =
+      TestStatix.measure(["sample"], fn ->
+        :timer.sleep(100)
+        expected
+      end)
+
     assert_receive {:server, <<"sample:10", _, "|ms">>}
     assert result == expected
 
     TestStatix.measure("sample", [sample_rate: 1.0, tags: ["foo", "bar"]], fn ->
       :timer.sleep(100)
     end)
+
     assert_receive {:server, <<"sample:10", _, "|ms|@1.0|#foo,bar">>}
 
     refute_received _any
@@ -237,12 +244,37 @@ defmodule StatixTest do
     OverridingStatix.measure("sample", [tags: ["foo"]], fn ->
       :timer.sleep(100)
     end)
+
     assert_receive {:server, <<"sample-measure-overridden:10", _, "|ms|#foo">>}
 
     OverridingStatix.set("sample", 3, tags: ["foo"])
     assert_receive {:server, "sample-overridden:3|s|#foo"}
   end
 
+  test "sends global tags when present" do
+    Application.put_env(:statix, :tags, ["tag:test"])
+
+    TestStatix.increment("sample", 3)
+    assert_receive {:server, "sample:3|c|#tag:test"}
+
+    TestStatix.increment("sample", 3, tags: ["foo"])
+    assert_receive {:server, "sample:3|c|#foo,tag:test"}
+  after
+    Application.delete_env(:statix, :tags)
+  end
+
+  test "sends global connection-specific tags" do
+    Application.put_env(:statix, TestStatix, tags: ["tag:test"])
+
+    TestStatix.increment("sample", 3)
+    assert_receive {:server, "sample:3|c|#tag:test"}
+
+    TestStatix.increment("sample", 3, tags: ["foo"])
+    assert_receive {:server, "sample:3|c|#foo,tag:test"}
+  after
+    Application.delete_env(:statix, TestStatix)
+  end
+  
   test "port closed" do
     TestStatix.close_port()
 

@@ -17,7 +17,7 @@ defmodule Statix.Conn do
   end
 
   def open(%__MODULE__{} = conn) do
-    {:ok, sock} = :gen_udp.open(0, [active: false])
+    {:ok, sock} = :gen_udp.open(0, active: false)
     %__MODULE__{conn | sock: sock}
   end
 
@@ -39,6 +39,7 @@ defmodule Statix.Conn do
   defp transmit(packet, sock) do
     try do
       Port.command(sock, packet)
+      
       receive do
         {:inet_reply, _port, status} -> status
       end
@@ -47,7 +48,7 @@ defmodule Statix.Conn do
         {:error, :port_closed}
     end
   end
-  
+
   if Version.match?(System.version(), ">= 1.3.0") do
     defp string_to_charlist(string), do: String.to_charlist(string)
   else

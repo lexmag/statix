@@ -17,7 +17,7 @@ defmodule Statix do
   `c:Application.start/2` callback:
 
       def start(_type, _args) do
-        MyApp.Statix.connect
+        :ok = MyApp.Statix.connect()
 
         # ...
       end
@@ -49,6 +49,8 @@ defmodule Statix do
       Defaults to `"127.0.0.1"`.
     * `:port` - (integer) the port (on `:host`) where the StatsD-compatible
       server is running. Defaults to `8125`.
+    * `:tags` - ([binary]) a list of global tags that will be sent with all
+      metrics. By default this option is not present.
 
   By default, the configuration is evaluated once, at compile time. If you plan
   on changing the configuration at runtime, you must specify the
@@ -82,7 +84,7 @@ defmodule Statix do
   alias __MODULE__.Conn
 
   @type key :: iodata
-  @type options :: [sample_rate: float, tags: [String.t]]
+  @type options :: [sample_rate: float, tags: [String.t()]]
   @type on_send :: :ok | {:error, term}
 
   @doc """
@@ -150,12 +152,12 @@ defmodule Statix do
       :ok
 
   """
-  @callback gauge(key, value :: String.Chars.t, options) :: on_send
+  @callback gauge(key, value :: String.Chars.t(), options) :: on_send
 
   @doc """
   Same as `gauge(key, value, [])`.
   """
-  @callback gauge(key, value :: String.Chars.t) :: on_send
+  @callback gauge(key, value :: String.Chars.t()) :: on_send
 
   @doc """
   Writes `value` to the histogram identified by `key`.
@@ -169,12 +171,12 @@ defmodule Statix do
       :ok
 
   """
-  @callback histogram(key, value :: String.Chars.t, options) :: on_send
+  @callback histogram(key, value :: String.Chars.t(), options) :: on_send
 
   @doc """
   Same as `histogram(key, value, [])`.
   """
-  @callback histogram(key, value :: String.Chars.t) :: on_send
+  @callback histogram(key, value :: String.Chars.t()) :: on_send
 
   @doc """
   Writes the given `value` to the StatsD timing identified by `key`.
@@ -187,12 +189,12 @@ defmodule Statix do
       :ok
 
   """
-  @callback timing(key, value :: String.Chars.t, options) :: on_send
+  @callback timing(key, value :: String.Chars.t(), options) :: on_send
 
   @doc """
   Same as `timing(key, value, [])`.
   """
-  @callback timing(key, value :: String.Chars.t) :: on_send
+  @callback timing(key, value :: String.Chars.t()) :: on_send
 
   @doc """
   Writes the given `value` to the StatsD set identified by `key`.
@@ -203,12 +205,12 @@ defmodule Statix do
       :ok
 
   """
-  @callback set(key, value :: String.Chars.t, options) :: on_send
+  @callback set(key, value :: String.Chars.t(), options) :: on_send
 
   @doc """
   Same as `set(key, value, [])`.
   """
-  @callback set(key, value :: String.Chars.t) :: on_send
+  @callback set(key, value :: String.Chars.t()) :: on_send
 
   @doc """
   Measures the execution time of the given `function` and writes that to the
@@ -257,14 +259,16 @@ defmodule Statix do
           def connect() do
             conn = @statix_conn
             current_conn = Statix.new_conn(__MODULE__)
+
             if conn.header != current_conn.header do
-              message =
+              raise(
                 "the current configuration for #{inspect(__MODULE__)} differs from " <>
-                "the one that was given during the compilation.\n" <>
-                "Be sure to use :runtime_config option " <>
-                "if you want to have different configurations"
-              raise message
+                  "the one that was given during the compilation.\n" <>
+                  "Be sure to use :runtime_config option " <>
+                  "if you want to have different configurations"
+              )
             end
+
             Statix.open_conn(conn)
             :ok
           end
@@ -289,7 +293,7 @@ defmodule Statix do
         Statix.transmit(current_conn(), :counter, key, [?-, to_string(val)], options)
       end
 
-      def gauge(key, val, options \\ [] ) do
+      def gauge(key, val, options \\ []) do
         Statix.transmit(current_conn(), :gauge, key, val, options)
       end
 
@@ -313,7 +317,15 @@ defmodule Statix do
         Statix.transmit(current_conn(), :set, key, val, options)
       end
 
-      defoverridable [increment: 3, decrement: 3, gauge: 3, histogram: 3, timing: 3, measure: 3, set: 3]
+      defoverridable(
+        increment: 3,
+        decrement: 3,
+        gauge: 3,
+        histogram: 3,
+        timing: 3,
+        measure: 3,
+        set: 3
+      )
     end
   end
 
@@ -335,8 +347,9 @@ defmodule Statix do
   def transmit(conn, type, key, val, options)
       when (is_binary(key) or is_list(key)) and is_list(options) do
     sample_rate = Keyword.get(options, :sample_rate)
+
     if is_nil(sample_rate) or sample_rate >= :rand.uniform() do
-      Conn.transmit(conn, type, key, to_string(val), options)
+      Conn.transmit(conn, type, key, to_string(val), put_global_tags(conn.sock, options))
     else
       :ok
     end
@@ -346,6 +359,7 @@ defmodule Statix do
     {env2, env1} =
       Application.get_all_env(:statix)
       |> Keyword.pop(module, [])
+
     {prefix1, env1} = Keyword.pop_first(env1, :prefix)
     {prefix2, env2} = Keyword.pop_first(env2, :prefix)
     env = Keyword.merge(env1, env2)
@@ -363,5 +377,17 @@ defmodule Statix do
       {nil, _p2} -> [part2, ?.]
       {_p1, _p2} -> [part1, ?., part2, ?.]
     end
+  end
+
+  defp put_global_tags(module, options) do
+    conn_tags =
+      :statix
+      |> Application.get_env(module, [])
+      |> Keyword.get(:tags, [])
+
+    app_tags = Application.get_env(:statix, :tags, [])
+    global_tags = conn_tags ++ app_tags
+
+    Keyword.update(options, :tags, global_tags, &(&1 ++ global_tags))
   end
 end
