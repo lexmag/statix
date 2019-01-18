@@ -26,3 +26,5 @@ jobs:
       env: STATIX_TEST_RUNTIME_CONFIG=true
     - otp_release: 21.0
       elixir: 1.7
+    - otp_release: 21.0
+      elixir: 1.8
