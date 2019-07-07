@@ -5,6 +5,8 @@ defmodule Statix.Conn do
 
   alias Statix.Packet
 
+  require Logger
+
   def new(host, port) when is_binary(host) do
     new(string_to_charlist(host), port)
   end
@@ -20,17 +22,34 @@ defmodule Statix.Conn do
     %__MODULE__{conn | sock: sock}
   end
 
-  def transmit(%__MODULE__{} = conn, type, key, val, options)
+  def transmit(%__MODULE__{header: header, sock: sock}, type, key, val, options)
       when is_binary(val) and is_list(options) do
-    Packet.build(conn.header, type, key, val, options)
-    |> transmit(conn.sock)
+    result =
+      header
+      |> Packet.build(type, key, val, options)
+      |> transmit(sock)
+
+    if result == {:error, :port_closed} do
+      Logger.error(fn ->
+        if(is_atom(sock), do: "", else: "Statix ") <>
+          "#{inspect(sock)} #{type} metric \"#{key}\" lost value #{val}" <> " due to port closure"
+      end)
+    end
+
+    result
   end
 
   defp transmit(packet, sock) do
-    Port.command(sock, packet)
-
-    receive do
-      {:inet_reply, _port, status} -> status
+    try do
+      Port.command(sock, packet)
+    rescue
+      ArgumentError ->
+        {:error, :port_closed}
+    else
+      true ->
+        receive do
+          {:inet_reply, _port, status} -> status
+        end
     end
   end
 

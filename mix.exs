@@ -14,7 +14,7 @@ defmodule Statix.Mixfile do
   end
 
   def application() do
-    [applications: []]
+    [applications: [:logger]]
   end
 
   defp description() do
