@@ -7,6 +7,15 @@ defmodule Statix.Packet do
   @addr_family if(otp_release >= '19', do: [1], else: [])
 
   def header({n1, n2, n3, n4}, port) do
+    true = Code.ensure_loaded?(:gen_udp)
+
+    anc_data_part =
+      if function_exported?(:gen_udp, :send, 5) do
+        [0, 0, 0, 0]
+      else
+        []
+      end
+
     @addr_family ++
       [
         band(bsr(port, 8), 0xFF),
@@ -15,7 +24,7 @@ defmodule Statix.Packet do
         band(n2, 0xFF),
         band(n3, 0xFF),
         band(n4, 0xFF)
-      ]
+      ] ++ anc_data_part
   end
 
   def build(header, name, key, val, options) do
