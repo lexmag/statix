@@ -11,7 +11,7 @@ defmodule Statix.Packet do
 
     anc_data_part =
       if function_exported?(:gen_udp, :send, 5) do
-        [0, 0, 0, 0]
+        [0, 0, 0]
       else
         []
       end
