@@ -2,7 +2,7 @@ dist: xenial
 
 language: elixir
 
-sudo: false
+sudo: true
 
 jobs:
   include:
@@ -12,7 +12,7 @@ jobs:
 before_install:
   - kerl_deactivate
   - source /etc/lsb-release
-  - echo "deb https://packages.erlang-solutions.com/ubuntu $DISTRIB_CODENAME contrib" >> /etc/apt/sources.list
-  - wget --quiet -O - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | apt-key add -
-  - apt-get update
-  - apt-get install --yes esl-erlang=1:21.3.8.4-1
+  - sudo echo "deb https://packages.erlang-solutions.com/ubuntu $DISTRIB_CODENAME contrib" >> /etc/apt/sources.list
+  - wget --quiet -O - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add -
+  - sudo apt-get update
+  - sudo apt-get install --yes esl-erlang=1:21.3.8.4-1
