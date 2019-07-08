@@ -35,5 +35,5 @@ before_script:
   - kerl update releases
   - kerl list releases
   - mkdir otp-21.3
-  - kerl install 21.3 otp-21.3
+  - sudo kerl install 21.3 otp-21.3
   - source otp-21.3/activate
