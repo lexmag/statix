@@ -1,6 +1,6 @@
 language: elixir
 
-sudo: false
+sudo: true
 
 jobs:
   include:
