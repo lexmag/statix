@@ -9,8 +9,10 @@ jobs:
     - otp_release: 21.3
       elixir: 1.7
 
-before_script:
-  - kerl list releases
-  - kerl list installations
-  - kerl update releases
-  - travis_wait kerl build git https://github.com/erlang/otp.git OTP-21.3.8.4 21.3.8.4
+before_install:
+  - kerl_deactivate
+  - source /etc/lsb-release
+  - echo "deb https://packages.erlang-solutions.com/ubuntu $DISTRIB_CODENAME contrib" >> /etc/apt/sources.list
+  - wget --quiet -O - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | apt-key add -
+  - apt-get update
+  - apt-get install --yes esl-erlang=1:21.3.8.4-1
