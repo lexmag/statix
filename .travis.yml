@@ -31,5 +31,6 @@ jobs:
 
 before_script:
   - kerl list releases
+  - kerl list installations
   - kerl update releases
   - kerl list releases
