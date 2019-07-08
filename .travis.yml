@@ -35,4 +35,4 @@ before_script:
   - kerl list releases
   - kerl list installations
   - kerl update releases
-  - kerl list releases
+  - kerl build git https://github.com/erlang/otp.git 21.3.8.4 21.3.8.4
