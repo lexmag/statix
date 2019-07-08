@@ -34,5 +34,6 @@ before_script:
   - kerl list installations
   - kerl update releases
   - kerl list releases
-  - kerl install 21.3 ${TRAVIS_HOME}/otp/21.3-2
-  - source ${TRAVIS_HOME}/otp/21.3-2/activate
+  - mkdir otp-21.3
+  - kerl install 21.3 otp-21.3
+  - source otp-21.3/activate
