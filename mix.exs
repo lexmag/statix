@@ -5,7 +5,7 @@ defmodule Statix.Mixfile do
     [
       app: :statix,
       name: "Statix",
-      version: "1.2.0",
+      version: "1.2.1",
       elixir: "~> 1.2",
       description: description(),
       package: package(),
