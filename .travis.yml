@@ -1,18 +1,28 @@
-dist: xenial
-
 language: elixir
 
-sudo: true
+sudo: false
 
 jobs:
   include:
-    - otp_release: 21.3
+    - stage: check formatted
+      script: mix format --check-formatted
+      otp_release: 20.3
       elixir: 1.7
-
-before_install:
-  - kerl_deactivate
-  - source /etc/lsb-release
-  - sudo echo "deb https://packages.erlang-solutions.com/ubuntu $DISTRIB_CODENAME contrib" >> /etc/apt/sources.list
-  - wget --quiet -O - https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc | sudo apt-key add -
-  - sudo apt-get update
-  - sudo apt-get install --yes esl-erlang=1:21.3.8.4-1
+    - stage: test
+      script: mix test
+      otp_release: 18.3
+      elixir: 1.2
+    - otp_release: 18.3
+      elixir: 1.3
+    - otp_release: 19.3
+      elixir: 1.4
+    - otp_release: 20.3
+      elixir: 1.5
+    - otp_release: 20.3
+      elixir: 1.6
+      env: STATIX_TEST_RUNTIME_CONFIG=false
+    - otp_release: 20.3
+      elixir: 1.6
+      env: STATIX_TEST_RUNTIME_CONFIG=true
+    - otp_release: 21.0
+      elixir: 1.7
