@@ -45,9 +45,7 @@ defmodule Statix.Packet do
     defp metric_type(unquote(name)), do: unquote(type)
   end
 
-  defp set_option(packet, _kind, nil) do
-    packet
-  end
+  defp set_option(packet, _kind, nil), do: packet
 
   defp set_option(packet, :sample_rate, sample_rate) when is_float(sample_rate) do
     [packet | ["|@", :erlang.float_to_binary(sample_rate, [:compact, decimals: 2])]]
@@ -56,6 +54,13 @@ defmodule Statix.Packet do
   defp set_option(packet, :tags, []), do: packet
 
   defp set_option(packet, :tags, tags) when is_list(tags) do
-    [packet | ["|#", Enum.join(tags, ",")]]
+    [packet | ["|#", Enum.join(normalize_tags(tags), ",")]]
+  end
+
+  defp normalize_tags(tags) do
+    Enum.map(tags, fn
+      {name, value} -> "#{name}:#{value}"
+      value -> to_string(value)
+    end)
   end
 end

@@ -104,6 +104,9 @@ defmodule StatixTest do
     TestStatix.increment("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|c|#foo:bar,baz"}
 
+    TestStatix.increment("sample", 3, tags: ["baz", foo: "bar"])
+    assert_receive {:server, "sample:3|c|#baz,foo:bar"}
+
     TestStatix.increment("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
     assert_receive {:server, "sample:3|c|@1.0|#foo,bar"}
 
@@ -124,8 +127,11 @@ defmodule StatixTest do
 
     TestStatix.decrement("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:-3|c|#foo:bar,baz"}
-    TestStatix.decrement("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
 
+    TestStatix.decrement("sample", 3, tags: ["baz", foo: "bar"])
+    assert_receive {:server, "sample:-3|c|#baz,foo:bar"}
+
+    TestStatix.decrement("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
     assert_receive {:server, "sample:-3|c|@1.0|#foo,bar"}
 
     TestStatix.decrement("sample", 3, sample_rate: 0.0)
@@ -142,6 +148,9 @@ defmodule StatixTest do
 
     TestStatix.gauge("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|g|#foo:bar,baz"}
+
+    TestStatix.gauge("sample", 3, tags: ["baz", foo: "bar"])
+    assert_receive {:server, "sample:3|g|#baz,foo:bar"}
 
     TestStatix.gauge("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
     assert_receive {:server, "sample:3|g|@1.0|#foo,bar"}
@@ -161,6 +170,9 @@ defmodule StatixTest do
     TestStatix.histogram("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|h|#foo:bar,baz"}
 
+    TestStatix.histogram("sample", 3, tags: ["baz", foo: "bar"])
+    assert_receive {:server, "sample:3|h|#baz,foo:bar"}
+
     TestStatix.histogram("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
     assert_receive {:server, "sample:3|h|@1.0|#foo,bar"}
 
@@ -178,6 +190,9 @@ defmodule StatixTest do
 
     TestStatix.timing("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|ms|#foo:bar,baz"}
+
+    TestStatix.timing("sample", 3, tags: ["baz", foo: "bar"])
+    assert_receive {:server, "sample:3|ms|#baz,foo:bar"}
 
     TestStatix.timing("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
     assert_receive {:server, "sample:3|ms|@1.0|#foo,bar"}
@@ -217,6 +232,9 @@ defmodule StatixTest do
 
     TestStatix.set("sample", 3, tags: ["foo:bar", "baz"])
     assert_receive {:server, "sample:3|s|#foo:bar,baz"}
+
+    TestStatix.set("sample", 3, tags: ["baz", foo: "bar"])
+    assert_receive {:server, "sample:3|s|#baz,foo:bar"}
 
     TestStatix.set("sample", 3, sample_rate: 1.0, tags: ["foo", "bar"])
     assert_receive {:server, "sample:3|s|@1.0|#foo,bar"}
