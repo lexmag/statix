@@ -72,6 +72,11 @@ defmodule Statix do
   In the example above, the `memory` measurement has been tagged with
   `region:east`. Not all StatsD-compatible servers support this feature.
 
+  Tags could also be added globally to be included in every metric sent:
+
+      config :statix, tags: ["env:\#{Mix.env()}"]
+
+
   ## Sampling
 
   All the callbacks from the `Statix` behaviour that accept options support
