@@ -90,6 +90,13 @@ Tags are a way of adding dimensions to metrics:
 MyApp.Statix.gauge("memory", 1, tags: ["region:east"])
 ```
 
+Tags could be added on project level in configuration:
+
+```elixir
+config :statix,
+  tags: ["environment:#{Mix.env}"]
+```
+
 ### Configuration
 
 Statix can be configured globally with:
