@@ -233,34 +233,36 @@ defmodule Statix do
   @callback measure(key, function :: (() -> result)) :: result when result: var
 
   defmacro __using__(opts) do
-    current_conn =
+    current_statix =
       if Keyword.get(opts, :runtime_config, false) do
         quote do
-          @statix_header_key Module.concat(__MODULE__, :__statix_header__)
+          @statix_key Module.concat(__MODULE__, :__statix__)
 
-          def connect() do
-            conn = Statix.new_conn(__MODULE__)
-            Application.put_env(:statix, @statix_header_key, conn.header)
+          def connect(options \\ []) do
+            statix = Statix.new(__MODULE__, options)
+            Application.put_env(:statix, @statix_key, statix)
 
-            Statix.open_conn(conn)
+            Statix.open(statix)
             :ok
           end
 
-          @compile {:inline, [current_conn: 0]}
-          defp current_conn() do
-            header = Application.fetch_env!(:statix, @statix_header_key)
-            %Statix.Conn{header: header, sock: __MODULE__}
+          @compile {:inline, [current_statix: 0]}
+
+          defp current_statix() do
+            Application.fetch_env!(:statix, @statix_key)
+          end
+
+          def configure(options) do
+            statix = Statix.new(__MODULE__, options)
+            Application.put_env(:statix, @statix_key, statix)
           end
         end
       else
         quote do
-          @statix_conn Statix.new_conn(__MODULE__)
+          @statix Statix.new(__MODULE__)
 
-          def connect() do
-            conn = @statix_conn
-            current_conn = Statix.new_conn(__MODULE__)
-
-            if conn.header != current_conn.header do
+          def connect(_options \\ []) do
+            if @statix != Statix.new(__MODULE__) do
               raise(
                 "the current configuration for #{inspect(__MODULE__)} differs from " <>
                   "the one that was given during the compilation.\n" <>
@@ -269,13 +271,21 @@ defmodule Statix do
               )
             end
 
-            Statix.open_conn(conn)
+            Statix.open(@statix)
             :ok
           end
 
-          @compile {:inline, [current_conn: 0]}
-          defp current_conn() do
-            @statix_conn
+          @compile {:inline, [current_statix: 0]}
+
+          defp current_statix(), do: @statix
+
+          def configure(_options) do
+            raise(
+              "the current configuration for #{inspect(__MODULE__)} differs from " <>
+                "the one that was given during the compilation.\n" <>
+                "Be sure to use :runtime_config option " <>
+                "if you want to have different configurations"
+            )
           end
         end
       end
@@ -283,26 +293,26 @@ defmodule Statix do
     quote location: :keep do
       @behaviour Statix
 
-      unquote(current_conn)
+      unquote(current_statix)
 
       def increment(key, val \\ 1, options \\ []) when is_number(val) do
-        Statix.transmit(current_conn(), :counter, key, val, options)
+        Statix.transmit(current_statix(), :counter, key, val, options)
       end
 
       def decrement(key, val \\ 1, options \\ []) when is_number(val) do
-        Statix.transmit(current_conn(), :counter, key, [?-, to_string(val)], options)
+        Statix.transmit(current_statix(), :counter, key, [?-, to_string(val)], options)
       end
 
       def gauge(key, val, options \\ []) do
-        Statix.transmit(current_conn(), :gauge, key, val, options)
+        Statix.transmit(current_statix(), :gauge, key, val, options)
       end
 
       def histogram(key, val, options \\ []) do
-        Statix.transmit(current_conn(), :histogram, key, val, options)
+        Statix.transmit(current_statix(), :histogram, key, val, options)
       end
 
       def timing(key, val, options \\ []) do
-        Statix.transmit(current_conn(), :timing, key, val, options)
+        Statix.transmit(current_statix(), :timing, key, val, options)
       end
 
       def measure(key, options \\ [], fun) when is_function(fun, 0) do
@@ -314,7 +324,7 @@ defmodule Statix do
       end
 
       def set(key, val, options \\ []) do
-        Statix.transmit(current_conn(), :set, key, val, options)
+        Statix.transmit(current_statix(), :set, key, val, options)
       end
 
       defoverridable(
@@ -329,65 +339,82 @@ defmodule Statix do
     end
   end
 
+  defstruct [:conn, :tags]
+
   @doc false
-  def new_conn(module) do
-    {host, port, prefix} = load_config(module)
-    conn = Conn.new(host, port)
-    header = IO.iodata_to_binary([conn.header | prefix])
-    %{conn | header: header, sock: module}
+  def new(module, options \\ []) do
+    config =
+      module
+      |> get_config()
+      |> Map.merge(Map.new(options))
+
+    conn = Conn.new(config.host, config.port)
+    header = IO.iodata_to_binary([conn.header | config.prefix])
+
+    %__MODULE__{
+      conn: %{conn | header: header, sock: module},
+      tags: config.tags
+    }
   end
 
   @doc false
-  def open_conn(%Conn{sock: module} = conn) do
-    conn = Conn.open(conn)
-    Process.register(conn.sock, module)
+  def open(%__MODULE__{conn: %{sock: module} = conn}) do
+    %{sock: sock} = Conn.open(conn)
+    Process.register(sock, module)
   end
 
   @doc false
-  def transmit(conn, type, key, val, options)
+  def transmit(%{conn: conn, tags: tags}, type, key, value, options)
       when (is_binary(key) or is_list(key)) and is_list(options) do
     sample_rate = Keyword.get(options, :sample_rate)
 
     if is_nil(sample_rate) or sample_rate >= :rand.uniform() do
-      Conn.transmit(conn, type, key, to_string(val), put_global_tags(conn.sock, options))
+      options = put_global_tags(options, tags)
+
+      Conn.transmit(conn, type, key, to_string(value), options)
     else
       :ok
     end
   end
 
-  defp load_config(module) do
-    {env2, env1} =
-      Application.get_all_env(:statix)
+  defp get_config(module) do
+    {conn_env, global_env} =
+      :statix
+      |> Application.get_all_env()
       |> Keyword.pop(module, [])
 
-    {prefix1, env1} = Keyword.pop_first(env1, :prefix)
-    {prefix2, env2} = Keyword.pop_first(env2, :prefix)
-    env = Keyword.merge(env1, env2)
+    {global_prefix, global_env} = Keyword.pop_first(global_env, :prefix)
+    {conn_prefix, conn_env} = Keyword.pop_first(conn_env, :prefix)
+    prefix = build_prefix(global_prefix, conn_prefix)
 
+    {global_tags, global_env} = Keyword.pop_first(global_env, :tags, [])
+    {conn_tags, conn_env} = Keyword.pop_first(conn_env, :tags, [])
+    tags = Keyword.merge(global_tags, conn_tags)
+
+    env = Keyword.merge(global_env, conn_env)
     host = Keyword.get(env, :host, "127.0.0.1")
     port = Keyword.get(env, :port, 8125)
-    prefix = build_prefix(prefix1, prefix2)
-    {host, port, prefix}
+
+    %{
+      prefix: prefix,
+      host: host,
+      port: port,
+      tags: tags
+    }
   end
 
-  defp build_prefix(part1, part2) do
-    case {part1, part2} do
+  defp build_prefix(global_part, conn_part) do
+    case {global_part, conn_part} do
       {nil, nil} -> ""
-      {_p1, nil} -> [part1, ?.]
-      {nil, _p2} -> [part2, ?.]
-      {_p1, _p2} -> [part1, ?., part2, ?.]
+      {_, nil} -> [global_part, ?.]
+      {nil, _} -> [conn_part, ?.]
+      {_, _} -> [global_part, ?., conn_part, ?.]
     end
   end
 
-  defp put_global_tags(module, options) do
-    conn_tags =
-      :statix
-      |> Application.get_env(module, [])
-      |> Keyword.get(:tags, [])
+  defp put_global_tags(options, []), do: options
 
-    app_tags = Application.get_env(:statix, :tags, [])
-    global_tags = conn_tags ++ app_tags
-
-    Keyword.update(options, :tags, global_tags, &(&1 ++ global_tags))
+  defp put_global_tags(options, tags) do
+    Keyword.update(options, :tags, tags, &(&1 ++ tags))
   end
 end
