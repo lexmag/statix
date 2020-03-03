@@ -389,7 +389,7 @@ defmodule Statix do
 
     {global_tags, global_env} = Keyword.pop_first(global_env, :tags, [])
     {conn_tags, conn_env} = Keyword.pop_first(conn_env, :tags, [])
-    tags = Keyword.merge(global_tags, conn_tags)
+    tags = global_tags ++ conn_tags
 
     env = Keyword.merge(global_env, conn_env)
     host = Keyword.get(env, :host, "127.0.0.1")
