@@ -251,11 +251,6 @@ defmodule Statix do
           defp current_statix() do
             Application.fetch_env!(:statix, @statix_key)
           end
-
-          def configure(options) do
-            statix = Statix.new(__MODULE__, options)
-            Application.put_env(:statix, @statix_key, statix)
-          end
         end
       else
         quote do
@@ -278,15 +273,6 @@ defmodule Statix do
           @compile {:inline, [current_statix: 0]}
 
           defp current_statix(), do: @statix
-
-          def configure(_options) do
-            raise(
-              "the current configuration for #{inspect(__MODULE__)} differs from " <>
-                "the one that was given during the compilation.\n" <>
-                "Be sure to use :runtime_config option " <>
-                "if you want to have different configurations"
-            )
-          end
         end
       end
 
