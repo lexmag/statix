@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.3.0
+
+* Added the `Statix.connect/1` callback to support runtime configuration.
+* Dropped support for Elixir v1.2.
+
 ## v1.2.1
 
 * Fixed port command for OTP versions that support ancillary data sending.
