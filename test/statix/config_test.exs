@@ -1,16 +1,7 @@
 defmodule Statix.ConfigTest do
-  use ExUnit.Case, async: false
+  use Statix.TestCase, async: false
 
   use Statix, runtime_config: true
-
-  setup_all do
-    {:ok, _} = Statix.TestServer.start_link(8125, __MODULE__.Server)
-    :ok
-  end
-
-  setup do
-    Statix.TestServer.setup(__MODULE__.Server)
-  end
 
   test "global tags when present" do
     Application.put_env(:statix, :tags, ["tag:test"])

@@ -1,7 +1,7 @@
 defmodule Statix.OverridingTest do
-  use ExUnit.Case
-
   @server_port 8225
+
+  use Statix.TestCase, port: @server_port
 
   Application.put_env(:statix, __MODULE__, port: @server_port)
 
@@ -35,13 +35,7 @@ defmodule Statix.OverridingTest do
     super([key, "-overridden"], value, options)
   end
 
-  setup_all do
-    {:ok, _} = Statix.TestServer.start_link(@server_port, __MODULE__.Server)
-    :ok
-  end
-
   setup do
-    Statix.TestServer.setup(__MODULE__.Server)
     connect()
   end
 

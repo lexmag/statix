@@ -1,7 +1,7 @@
 runtime_config? = System.get_env("STATIX_TEST_RUNTIME_CONFIG") in ["1", "true"]
 
 defmodule StatixTest do
-  use ExUnit.Case
+  use Statix.TestCase
 
   import ExUnit.CaptureLog
 
@@ -12,13 +12,7 @@ defmodule StatixTest do
     Port.close(sock)
   end
 
-  setup_all do
-    {:ok, _} = Statix.TestServer.start_link(8125, __MODULE__.Server)
-    :ok
-  end
-
   setup do
-    Statix.TestServer.setup(__MODULE__.Server)
     connect()
   end
 
