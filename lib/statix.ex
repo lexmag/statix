@@ -238,8 +238,8 @@ defmodule Statix do
         quote do
           @statix_key Module.concat(__MODULE__, :__statix__)
 
-          def connect() do
-            statix = Statix.new(__MODULE__)
+          def connect(options \\ []) do
+            statix = Statix.new(__MODULE__, options)
             Application.put_env(:statix, @statix_key, statix)
 
             Statix.open(statix)
@@ -254,10 +254,10 @@ defmodule Statix do
         end
       else
         quote do
-          @statix Statix.new(__MODULE__)
+          @statix Statix.new(__MODULE__, [])
 
-          def connect() do
-            if @statix != Statix.new(__MODULE__) do
+          def connect(options \\ []) do
+            if @statix != Statix.new(__MODULE__, options) do
               raise(
                 "the current configuration for #{inspect(__MODULE__)} differs from " <>
                   "the one that was given during the compilation.\n" <>
@@ -328,8 +328,12 @@ defmodule Statix do
   defstruct [:conn, :tags]
 
   @doc false
-  def new(module) do
-    config = get_config(module)
+  def new(module, options) do
+    config =
+      module
+      |> get_config()
+      |> Map.merge(Map.new(options))
+
     conn = Conn.new(config.host, config.port)
     header = IO.iodata_to_binary([conn.header | config.prefix])
 
