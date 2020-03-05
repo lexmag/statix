@@ -2,6 +2,10 @@ language: elixir
 
 sudo: false
 
+branches:
+  only:
+    - master
+
 jobs:
   include:
     - stage: check formatted
