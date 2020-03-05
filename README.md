@@ -17,7 +17,7 @@ What makes Statix the fastest library around:
 ![Statix](https://www.dropbox.com/s/uijh5i8qgzmd11a/statix-v1.0.0.png?raw=1)
 
 <details>
-  <summary>It is possible to measure it yourself.</summary>
+  <summary>It is possible to measure that yourself.</summary>
 
   ```elixir
   for _ <- 1..10_000 do
@@ -59,7 +59,7 @@ defmodule MyApp.Statix do
 end
 ```
 
-Before using connection the `connect/0` function needs to be invoked.
+Before using connection the `connect/0,1` function needs to be invoked.
 In general, this function is called when your application starts (for example, in its `start/2` callback):
 
 ```elixir

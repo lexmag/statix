@@ -1,15 +1,23 @@
 defmodule Statix.Mixfile do
   use Mix.Project
 
+  @version "1.2.1"
+  @source_url "https://github.com/lexmag/statix"
+
   def project() do
     [
       app: :statix,
-      name: "Statix",
-      version: "1.2.1",
+      version: @version,
       elixir: "~> 1.3",
+      deps: deps(),
+
+      # Hex
       description: description(),
       package: package(),
-      deps: deps()
+
+      # Docs
+      name: "Statix",
+      docs: docs()
     ]
   end
 
@@ -25,11 +33,23 @@ defmodule Statix.Mixfile do
     [
       maintainers: ["Aleksei Magusev", "Andrea Leopardi"],
       licenses: ["ISC"],
-      links: %{"GitHub" => "https://github.com/lexmag/statix"}
+      links: %{"GitHub" => @source_url}
     ]
   end
 
   defp deps() do
-    [{:ex_doc, ">= 0.0.0", only: :docs}]
+    [{:ex_doc, "~> 0.18.0", only: :dev}]
+  end
+
+  defp docs() do
+    [
+      main: "Statix",
+      source_ref: "v#{@version}",
+      source_url: @source_url,
+      extras: [
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    ]
   end
 end

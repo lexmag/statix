@@ -10,10 +10,10 @@ defmodule Statix do
       end
 
   This will make `MyApp.Statix` a Statix connection that implements the `Statix`
-  behaviour. This connection can be started with the `MyApp.Statix.connect/0`
-  function (see the `c:connect/0` callback) and a few functions can be called on
+  behaviour. This connection can be started with the `MyApp.Statix.connect/1`
+  function (see the `c:connect/1` callback) and a few functions can be called on
   it to report metrics to the StatsD-compatible server read from the
-  configuration. Usually, `connect/0` is called in your application's
+  configuration. Usually, `connect/1` is called in your application's
   `c:Application.start/2` callback:
 
       def start(_type, _args) do
