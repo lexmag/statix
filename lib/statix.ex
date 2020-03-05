@@ -88,12 +88,19 @@ defmodule Statix do
   @type on_send :: :ok | {:error, term}
 
   @doc """
+  Same as `connect([])`.
+  """
+  @callback connect() :: :ok
+
+  @doc """
   Opens the connection to the StatsD-compatible server.
 
   The configuration is read from the configuration for the `:statix` application
   (both globally and per connection).
+
+  The given `config` overrides the configuration read from the application environment.
   """
-  @callback connect() :: :ok
+  @callback connect(config :: keyword) :: :ok
 
   @doc """
   Increments the StatsD counter identified by `key` by the given `value`.
@@ -238,8 +245,8 @@ defmodule Statix do
         quote do
           @statix_key Module.concat(__MODULE__, :__statix__)
 
-          def connect(options \\ []) do
-            statix = Statix.new(__MODULE__, options)
+          def connect(config \\ []) do
+            statix = Statix.new(__MODULE__, config)
             Application.put_env(:statix, @statix_key, statix)
 
             Statix.open(statix)
@@ -256,8 +263,8 @@ defmodule Statix do
         quote do
           @statix Statix.new(__MODULE__, [])
 
-          def connect(options \\ []) do
-            if @statix != Statix.new(__MODULE__, options) do
+          def connect(config \\ []) do
+            if @statix != Statix.new(__MODULE__, config) do
               raise(
                 "the current configuration for #{inspect(__MODULE__)} differs from " <>
                   "the one that was given during the compilation.\n" <>
@@ -328,11 +335,11 @@ defmodule Statix do
   defstruct [:conn, :tags]
 
   @doc false
-  def new(module, options) do
+  def new(module, config) do
     config =
       module
       |> get_config()
-      |> Map.merge(Map.new(options))
+      |> Map.merge(Map.new(config))
 
     conn = Conn.new(config.host, config.port)
     header = IO.iodata_to_binary([conn.header | config.prefix])
