@@ -8,7 +8,7 @@ defmodule Statix.Conn do
   require Logger
 
   def new(host, port) when is_binary(host) do
-    new(string_to_charlist(host), port)
+    new(String.to_charlist(host), port)
   end
 
   def new(host, port) when is_list(host) or is_tuple(host) do
@@ -51,11 +51,5 @@ defmodule Statix.Conn do
           {:inet_reply, _port, status} -> status
         end
     end
-  end
-
-  if Version.match?(System.version(), ">= 1.3.0") do
-    defp string_to_charlist(string), do: String.to_charlist(string)
-  else
-    defp string_to_charlist(string), do: String.to_char_list(string)
   end
 end
