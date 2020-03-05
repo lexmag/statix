@@ -341,19 +341,23 @@ defmodule Statix do
       |> get_config()
       |> Map.merge(Map.new(config))
 
-    conn = Conn.new(config.host, config.port)
+    conn = Conn.new(module, config.host, config.port, config.pool_size)
     header = IO.iodata_to_binary([conn.header | config.prefix])
 
     %__MODULE__{
-      conn: %{conn | header: header, sock: module},
+      conn: %{conn | header: header, module: module},
       tags: config.tags
     }
   end
 
   @doc false
-  def open(%__MODULE__{conn: %{sock: module} = conn}) do
-    %{sock: sock} = Conn.open(conn)
-    Process.register(sock, module)
+  def open(%__MODULE__{conn: %{} = conn}) do
+    conn = Conn.open(conn)
+
+    Enum.zip(conn.socks, conn.sock_names)
+    |> Enum.each(fn {sock, name} ->
+      Process.register(sock, name)
+    end)
   end
 
   @doc false
@@ -387,12 +391,14 @@ defmodule Statix do
     env = Keyword.merge(global_env, conn_env)
     host = Keyword.get(env, :host, "127.0.0.1")
     port = Keyword.get(env, :port, 8125)
+    pool_size = Keyword.get(env, :pool_size, 1)
 
     %{
       prefix: prefix,
       host: host,
       port: port,
-      tags: tags
+      tags: tags,
+      pool_size: pool_size
     }
   end
 

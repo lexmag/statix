@@ -7,7 +7,7 @@ defmodule Statix.ConfigTest do
     connect(tags: ["tag:test"])
 
     increment("sample", 2)
-    assert_receive {:test_server, "sample:2|c|#tag:test"}
+    assert_receive {:test_server, _, "sample:2|c|#tag:test"}
   end
 
   test "global tags when present" do
@@ -16,10 +16,10 @@ defmodule Statix.ConfigTest do
     connect()
 
     increment("sample", 3)
-    assert_receive {:test_server, "sample:3|c|#tag:test"}
+    assert_receive {:test_server, _, "sample:3|c|#tag:test"}
 
     increment("sample", 3, tags: ["foo"])
-    assert_receive {:test_server, "sample:3|c|#foo,tag:test"}
+    assert_receive {:test_server, _, "sample:3|c|#foo,tag:test"}
   after
     Application.delete_env(:statix, :tags)
   end
@@ -30,10 +30,10 @@ defmodule Statix.ConfigTest do
     connect()
 
     increment("sample", 4)
-    assert_receive {:test_server, "sample:4|c|#tag:test"}
+    assert_receive {:test_server, _, "sample:4|c|#tag:test"}
 
     increment("sample", 4, tags: ["foo"])
-    assert_receive {:test_server, "sample:4|c|#foo,tag:test"}
+    assert_receive {:test_server, _, "sample:4|c|#foo,tag:test"}
   after
     Application.delete_env(:statix, __MODULE__)
   end

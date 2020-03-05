@@ -90,6 +90,18 @@ Tags are a way of adding dimensions to metrics:
 MyApp.Statix.gauge("memory", 1, tags: ["region:east"])
 ```
 
+### Pooling
+
+Statix transmits data using [ports](https://hexdocs.pm/elixir/Port.html).
+
+If a port is busy when you try to send a command to it, the sender may be suspended and some blocking may occur. This becomes more of an issue in highly concurrent environments.
+
+In order to get around that, Statix allows you to start multiple ports, and randomly chooses one at the time of transmit.
+
+This option can be configured via the `:pool_size` option.
+
+By default, only one port is opened.
+
 ### Configuration
 
 Statix can be configured globally with:
@@ -98,7 +110,8 @@ Statix can be configured globally with:
 config :statix,
   prefix: "sample",
   host: "stats.tld",
-  port: 8181
+  port: 8181,
+  pool_size: 5
 ```
 
 and on a per connection basis as well:
@@ -113,6 +126,7 @@ The defaults are:
 * prefix: `nil`
 * host: `"127.0.0.1"`
 * port: `8125`
+* pool_size: `1`
 
 __Note:__ by default, configuration is evaluated once, at compile time.
 If you plan using other configuration at runtime, you must specify the `:runtime_config` option:
