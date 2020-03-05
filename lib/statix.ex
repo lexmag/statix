@@ -186,6 +186,11 @@ defmodule Statix do
   @callback histogram(key, value :: String.Chars.t()) :: on_send
 
   @doc """
+  Same as `timing(key, value, [])`.
+  """
+  @callback timing(key, value :: String.Chars.t()) :: on_send
+
+  @doc """
   Writes the given `value` to the StatsD timing identified by `key`.
 
   `value` is expected in milliseconds.
@@ -197,11 +202,6 @@ defmodule Statix do
 
   """
   @callback timing(key, value :: String.Chars.t(), options) :: on_send
-
-  @doc """
-  Same as `timing(key, value, [])`.
-  """
-  @callback timing(key, value :: String.Chars.t()) :: on_send
 
   @doc """
   Writes the given `value` to the StatsD set identified by `key`.
