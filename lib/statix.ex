@@ -332,7 +332,7 @@ defmodule Statix do
     end
   end
 
-  defstruct [:conn, :tags]
+  defstruct [:conn, :tags, :pool]
 
   @doc false
   def new(module, config) do
@@ -345,30 +345,49 @@ defmodule Statix do
     header = IO.iodata_to_binary([conn.header | config.prefix])
 
     %__MODULE__{
-      conn: %{conn | header: header, sock: module},
+      conn: %{conn | header: header},
+      pool: build_pool(module, config.pool_size),
       tags: config.tags
     }
   end
 
-  @doc false
-  def open(%__MODULE__{conn: %{sock: module} = conn}) do
-    %{sock: sock} = Conn.open(conn)
-    Process.register(sock, module)
+  defp build_pool(module, 1), do: [module]
+
+  defp build_pool(module, size) do
+    Enum.map(1..size, &:"#{module}-#{&1}")
   end
 
   @doc false
-  def transmit(%{conn: conn, tags: tags}, type, key, value, options)
+  def open(%__MODULE__{conn: conn, pool: pool}) do
+    Enum.each(pool, fn name ->
+      %{sock: sock} = Conn.open(conn)
+      Process.register(sock, name)
+    end)
+  end
+
+  @doc false
+  def transmit(
+        %{conn: conn, pool: pool, tags: tags},
+        type,
+        key,
+        value,
+        options
+      )
       when (is_binary(key) or is_list(key)) and is_list(options) do
     sample_rate = Keyword.get(options, :sample_rate)
 
     if is_nil(sample_rate) or sample_rate >= :rand.uniform() do
       options = put_global_tags(options, tags)
 
-      Conn.transmit(conn, type, key, to_string(value), options)
+      %{conn | sock: pick_name(pool)}
+      |> Conn.transmit(type, key, to_string(value), options)
     else
       :ok
     end
   end
+
+  defp pick_name([name]), do: name
+  defp pick_name(pool), do: Enum.random(pool)
 
   defp get_config(module) do
     {conn_env, global_env} =
@@ -387,11 +406,13 @@ defmodule Statix do
     env = Keyword.merge(global_env, conn_env)
     host = Keyword.get(env, :host, "127.0.0.1")
     port = Keyword.get(env, :port, 8125)
+    pool_size = Keyword.get(env, :pool_size, 1)
 
     %{
       prefix: prefix,
       host: host,
       port: port,
+      pool_size: pool_size,
       tags: tags
     }
   end

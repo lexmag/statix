@@ -21,8 +21,9 @@ defmodule Statix.TestServer do
   end
 
   @impl true
-  def handle_info({:udp, socket, _, _, packet}, %{socket: socket, test: test} = state) do
-    send(test, {:test_server, packet})
+  def handle_info({:udp, socket, host, port, packet}, %{socket: socket, test: test} = state) do
+    metadata = %{host: host, port: port, socket: socket}
+    send(test, {:test_server, metadata, packet})
     {:noreply, state}
   end
 
