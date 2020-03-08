@@ -51,9 +51,12 @@ defmodule Statix do
       server is running. Defaults to `8125`.
     * `:tags` - ([binary]) a list of global tags that will be sent with all
       metrics. By default this option is not present.
+      See the "Tags" section for more information.
+    * `:pool_size` - (integer) number of ports used to distribute the metric sending.
+      Defaults to `1`. See the "Pooling" section for more information.
 
-  By default, the configuration is evaluated once, at compile time. If you plan
-  on changing the configuration at runtime, you must specify the
+  By default, the configuration is evaluated once, at compile time.
+  If you plan on changing the configuration at runtime, you must specify the
   `:runtime_config` option to be `true` when calling `use Statix`:
 
       defmodule MyApp.Statix do
@@ -79,6 +82,20 @@ defmodule Statix do
   In the example above, the UDP packet will only be sent to the server about
   half of the time, but the resulting value will be adjusted on the server
   according to the given sample rate.
+
+  ## Pooling
+
+  Statix transmits data using [ports](https://hexdocs.pm/elixir/Port.html).
+
+  If a port is busy when you try to send a command to it, the sender may be suspended and some blocking may occur. This becomes more of an issue in highly concurrent environments.
+
+  In order to get around that, Statix allows you to start multiple ports, and randomly picks one at the time of transmit.
+
+  This option can be configured via the `:pool_size` option:
+
+      config :statix, MyApp.Statix,
+        pool_size: 3
+
   """
 
   alias __MODULE__.Conn

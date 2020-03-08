@@ -18,8 +18,8 @@ defmodule Statix.ConfigTest do
     increment("sample", 3)
     assert_receive {:test_server, _, "sample:3|c|#tag:test"}
 
-    increment("sample", 3, tags: ["foo"])
-    assert_receive {:test_server, _, "sample:3|c|#foo,tag:test"}
+    timing("sample", 3, tags: ["foo"])
+    assert_receive {:test_server, _, "sample:3|ms|#foo,tag:test"}
   after
     Application.delete_env(:statix, :tags)
   end
@@ -29,11 +29,11 @@ defmodule Statix.ConfigTest do
 
     connect()
 
-    increment("sample", 4)
-    assert_receive {:test_server, _, "sample:4|c|#tag:test"}
+    set("sample", 4)
+    assert_receive {:test_server, _, "sample:4|s|#tag:test"}
 
-    increment("sample", 4, tags: ["foo"])
-    assert_receive {:test_server, _, "sample:4|c|#foo,tag:test"}
+    gauge("sample", 4, tags: ["foo"])
+    assert_receive {:test_server, _, "sample:4|g|#foo,tag:test"}
   after
     Application.delete_env(:statix, __MODULE__)
   end
