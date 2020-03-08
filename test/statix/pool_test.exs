@@ -6,15 +6,7 @@ defmodule Statix.PoolTest do
   @pool_size 10
 
   setup do
-    connect()
-  end
-
-  setup_all do
-    Application.put_env(:statix, :pool_size, @pool_size)
-
-    on_exit(fn ->
-      Application.delete_env(:statix, :pool_size)
-    end)
+    connect(pool_size: @pool_size)
   end
 
   test "starts `:pool_size` number of ports and randomly chooses one" do
