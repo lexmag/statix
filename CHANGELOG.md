@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.4.0
+
+* Added support for connection pooling that is configurable via the `:pool_size` option.
+
 ## v1.3.0
 
 * Added the `c:Statix.connect/1` callback to support runtime configuration.
