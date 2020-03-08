@@ -8,8 +8,8 @@ defmodule StatixTest do
   use Statix, runtime_config: unquote(runtime_config?)
 
   defp close_port() do
-    %{conn: %Statix.Conn{sock_names: socks}} = current_statix()
-    Enum.each(socks, &Port.close/1)
+    %{pool: pool} = current_statix()
+    Enum.each(pool, &Port.close/1)
   end
 
   setup do
