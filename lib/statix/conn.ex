@@ -12,9 +12,17 @@ defmodule Statix.Conn do
   end
 
   def new(host, port) when is_list(host) or is_tuple(host) do
-    {:ok, addr} = :inet.getaddr(host, :inet)
-    header = Packet.header(addr, port)
-    %__MODULE__{header: header}
+    case :inet.getaddr(host, :inet) do
+      {:ok, address} ->
+        header = Packet.header(address, port)
+        %__MODULE__{header: header}
+
+      {:error, reason} ->
+        raise(
+          "cannot get the IP address for the provided host " <>
+            "due to reason: #{:inet.format_error(reason)}"
+        )
+    end
   end
 
   def open(%__MODULE__{} = conn) do

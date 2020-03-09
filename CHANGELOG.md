@@ -12,7 +12,7 @@
 ## v1.2.1
 
 * Fixed port command for OTP versions that support ancillary data sending.
-* Fixed ArgumentError raising when port gets closed.
+* Fixed `ArgumentError` raising when port gets closed.
 
 ## v1.2.0
 
