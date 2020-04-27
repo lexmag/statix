@@ -117,12 +117,12 @@ defmodule Statix do
   @doc """
   Opens the connection to the StatsD-compatible server.
 
-  The configuration is read from the configuration for the `:statix` application
+  The configuration is read from the environment for the `:statix` application
   (both globally and per connection).
 
-  The given `config` overrides the configuration read from the application environment.
+  The given `options` override the configuration read from the application environment.
   """
-  @callback connect(config :: keyword) :: :ok
+  @callback connect(options :: keyword) :: :ok
 
   @doc """
   Increments the StatsD counter identified by `key` by the given `value`.
@@ -267,8 +267,8 @@ defmodule Statix do
         quote do
           @statix_key Module.concat(__MODULE__, :__statix__)
 
-          def connect(config \\ []) do
-            statix = Statix.new(__MODULE__, config)
+          def connect(options \\ []) do
+            statix = Statix.new(__MODULE__, options)
             Application.put_env(:statix, @statix_key, statix)
 
             Statix.open(statix)
@@ -285,8 +285,8 @@ defmodule Statix do
         quote do
           @statix Statix.new(__MODULE__, [])
 
-          def connect(config \\ []) do
-            if @statix != Statix.new(__MODULE__, config) do
+          def connect(options \\ []) do
+            if @statix != Statix.new(__MODULE__, options) do
               raise(
                 "the current configuration for #{inspect(__MODULE__)} differs from " <>
                   "the one that was given during the compilation.\n" <>
@@ -357,12 +357,8 @@ defmodule Statix do
   defstruct [:conn, :tags, :pool]
 
   @doc false
-  def new(module, config) do
-    config =
-      module
-      |> get_config()
-      |> Map.merge(Map.new(config))
-
+  def new(module, options) do
+    config = get_config(module, options)
     conn = Conn.new(config.host, config.port)
     header = IO.iodata_to_binary([conn.header | config.prefix])
 
@@ -411,40 +407,38 @@ defmodule Statix do
   defp pick_name([name]), do: name
   defp pick_name(pool), do: Enum.random(pool)
 
-  defp get_config(module) do
-    {conn_env, global_env} =
+  defp get_config(module, overrides) do
+    {module_env, global_env} =
       :statix
       |> Application.get_all_env()
       |> Keyword.pop(module, [])
 
-    {global_prefix, global_env} = Keyword.pop_first(global_env, :prefix)
-    {conn_prefix, conn_env} = Keyword.pop_first(conn_env, :prefix)
-    prefix = build_prefix(global_prefix, conn_prefix)
+    env = module_env ++ global_env
+    options = overrides ++ env
 
-    {global_tags, global_env} = Keyword.pop_first(global_env, :tags, [])
-    {conn_tags, conn_env} = Keyword.pop_first(conn_env, :tags, [])
-    tags = global_tags ++ conn_tags
-
-    env = Keyword.merge(global_env, conn_env)
-    host = Keyword.get(env, :host, "127.0.0.1")
-    port = Keyword.get(env, :port, 8125)
-    pool_size = Keyword.get(env, :pool_size, 1)
+    tags =
+      Keyword.get_lazy(overrides, :tags, fn ->
+        env |> Keyword.get_values(:tags) |> Enum.concat()
+      end)
 
     %{
-      prefix: prefix,
-      host: host,
-      port: port,
-      pool_size: pool_size,
+      prefix: build_prefix(env, overrides),
+      host: Keyword.get(options, :host, "127.0.0.1"),
+      port: Keyword.get(options, :port, 8125),
+      pool_size: Keyword.get(options, :pool_size, 1),
       tags: tags
     }
   end
 
-  defp build_prefix(global_part, conn_part) do
-    case {global_part, conn_part} do
-      {nil, nil} -> ""
-      {_, nil} -> [global_part, ?.]
-      {nil, _} -> [conn_part, ?.]
-      {_, _} -> [global_part, ?., conn_part, ?.]
+  defp build_prefix(env, overrides) do
+    case Keyword.fetch(overrides, :prefix) do
+      {:ok, prefix} ->
+        [prefix, ?.]
+
+      :error ->
+        env
+        |> Keyword.get_values(:prefix)
+        |> Enum.map_join(&(&1 && [&1, ?.]))
     end
   end
 

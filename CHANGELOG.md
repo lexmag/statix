@@ -1,5 +1,7 @@
 # Changelog
 
+* Fixed prefix building when connect options provided.
+
 ## v1.4.0
 
 * Added support for connection pooling that is configurable via the `:pool_size` option.

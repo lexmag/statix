@@ -4,10 +4,10 @@ defmodule Statix.ConfigTest do
   use Statix, runtime_config: true
 
   test "connect/1" do
-    connect(tags: ["tag:test"])
+    connect(tags: ["tag:test"], prefix: "foo")
 
     increment("sample", 2)
-    assert_receive {:test_server, _, "sample:2|c|#tag:test"}
+    assert_receive {:test_server, _, "foo.sample:2|c|#tag:test"}
   end
 
   test "global tags when present" do
