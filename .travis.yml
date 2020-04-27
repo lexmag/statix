@@ -1,7 +1,5 @@
 language: elixir
 
-sudo: false
-
 branches:
   only:
     - master
@@ -14,6 +12,7 @@ jobs:
       elixir: 1.7
     - stage: test
       script: mix test
+      otp_release: 18.3
       elixir: 1.3
     - otp_release: 19.3
       elixir: 1.4
