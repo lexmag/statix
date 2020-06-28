@@ -35,6 +35,10 @@ defmodule Statix.OverridingTest do
     super([key, "-overridden"], value, options)
   end
 
+  def distribution(key, value, options) do
+    super([key, "-overridden"], value, options)
+  end
+
   setup do
     connect()
   end
@@ -62,6 +66,11 @@ defmodule Statix.OverridingTest do
   test "timing/3" do
     timing("sample", 3, tags: ["foo"])
     assert_receive {:test_server, _, "sample-overridden:3|ms|#foo"}
+  end
+
+  test "distribution/3" do
+    distribution("sample", 3, tags: ["foo"])
+    assert_receive {:test_server, _, "sample-overridden:3|d|#foo"}
   end
 
   test "measure/3" do

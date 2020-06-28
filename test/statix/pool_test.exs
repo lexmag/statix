@@ -18,7 +18,8 @@ defmodule Statix.PoolingTest do
         {:histogram, [3]},
         {:timing, [3]},
         {:measure, [fn -> nil end]},
-        {:set, [3]}
+        {:set, [3]},
+        {:distribution, [3]}
       ]
       |> Enum.map(fn {function, arguments} ->
         apply(__MODULE__, function, ["sample" | arguments])
