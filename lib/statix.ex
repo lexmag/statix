@@ -109,6 +109,16 @@ defmodule Statix do
   @type options :: [sample_rate: float, tags: [String.t()]]
   @type on_send :: :ok | {:error, term}
 
+  @type event_options :: [
+          timestamp: integer,
+          hostname: String.t(),
+          aggregation_key: String.t(),
+          priority: :low | :normal,
+          source_type_name: String.t(),
+          alert_type: :error | :warning | :info | :success,
+          tags: [String.t()]
+        ]
+
   @doc """
   Same as `connect([])`.
   """
@@ -261,6 +271,11 @@ defmodule Statix do
   """
   @callback measure(key, function :: (() -> result)) :: result when result: var
 
+  @doc """
+  Emits event to the event stream (note: this is a DataDog StatsD protocol extension).
+  """
+  @callback event(title :: String.t(), text :: String.t(), event_options) :: on_send
+
   defmacro __using__(opts) do
     current_statix =
       if Keyword.get(opts, :runtime_config, false) do
@@ -342,6 +357,10 @@ defmodule Statix do
         Statix.transmit(current_statix(), :set, key, val, options)
       end
 
+      def event(title, text, options \\ []) do
+        Statix.transmit(current_statix(), :event, title, text, options)
+      end
+
       defoverridable(
         increment: 3,
         decrement: 3,
@@ -349,7 +368,8 @@ defmodule Statix do
         histogram: 3,
         timing: 3,
         measure: 3,
-        set: 3
+        set: 3,
+        event: 3
       )
     end
   end

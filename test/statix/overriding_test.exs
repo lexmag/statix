@@ -35,6 +35,10 @@ defmodule Statix.OverridingTest do
     super([key, "-overridden"], value, options)
   end
 
+  def event(title, text, options) do
+    super("#{title}-overridden", text, options)
+  end
+
   setup do
     connect()
   end
@@ -75,5 +79,10 @@ defmodule Statix.OverridingTest do
   test "set/3" do
     set("sample", 3, tags: ["foo"])
     assert_receive {:test_server, _, "sample-overridden:3|s|#foo"}
+  end
+
+  test "event/3" do
+    event("sample-title", "sample-text", tags: ["foo"])
+    assert_receive {:test_server, _, "_e{23,11}:sample-title-overridden|sample-text|#foo"}
   end
 end
