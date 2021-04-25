@@ -1,6 +1,7 @@
 defmodule Statix.Mixfile do
   use Mix.Project
 
+  @name "Statix"
   @version "1.4.0"
   @source_url "https://github.com/lexmag/statix"
 
@@ -8,7 +9,7 @@ defmodule Statix.Mixfile do
     [
       app: :statix,
       version: @version,
-      elixir: "~> 1.3",
+      elixir: "~> 1.5",
       deps: deps(),
 
       # Hex
@@ -16,7 +17,7 @@ defmodule Statix.Mixfile do
       package: package(),
 
       # Docs
-      name: "Statix",
+      name: @name,
       docs: docs()
     ]
   end
@@ -43,13 +44,10 @@ defmodule Statix.Mixfile do
 
   defp docs() do
     [
-      main: "Statix",
+      main: @name,
       source_ref: "v#{@version}",
       source_url: @source_url,
-      extras: [
-        "README.md",
-        "CHANGELOG.md"
-      ]
+      extras: ["CHANGELOG.md"]
     ]
   end
 end
