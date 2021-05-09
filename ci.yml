@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  format:
+    name: Code linting
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Elixir environment
+        uses: erlef/setup-elixir@v1
+        with:
+          otp-version: 20.3
+          elixir-version: 1.7
+
+      - name: Check unused dependencies
+        run: mix deps.get && mix deps.unlock --check-unused
+
+      - name: Check formatting
+        run: mix format --check-formatted
+
+      - name: Check compilation warnings
+        run: mix compile --warnings-as-errors
+
+  test:
+    name: Test suite
+    runs-on: ubuntu-18.04
+
+    strategy:
+      matrix:
+        versions:
+          - otp: 18.3
+            elixir: 1.3
+          - otp: 19.3
+            elixir: 1.4
+          - otp: 20.3
+            elixir: 1.5
+          - otp: 20.3
+            elixir: 1.6
+          - otp: 21.0
+            elixir: 1.7
+        include:
+          - versions.otp: 20.3
+            versions.elixir: 1.6
+            env:
+              STATIX_TEST_RUNTIME_CONFIG: [true, false]
+
+    env:
+      MIX_ENV: test
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Elixir environment
+        uses: erlef/setup-elixir@v1
+        with:
+          elixir-version: ${{ matrix.versions.elixir }}
+          otp-version: ${{ matrix.versions.otp }}
+
+      - name: Install dependencies
+        run: mix deps.get --only test
+
+      - name: Run tests
+        run: mix test
