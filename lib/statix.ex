@@ -10,16 +10,19 @@ defmodule Statix do
       end
 
   This will make `MyApp.Statix` a Statix connection that implements the `Statix`
-  behaviour. This connection can be started with the `MyApp.Statix.connect/1`
-  function (see the `c:connect/1` callback) and a few functions can be called on
-  it to report metrics to the StatsD-compatible server read from the
-  configuration. Usually, `connect/1` is called in your application's
-  `c:Application.start/2` callback:
+  behaviour. A few functions can be called on it to report metrics to the
+  StatsD-compatible server read from the configuration. The connection can be
+  started by including `MyApp.Statix` in your application's `c:Application.start/2`
+  callback's list of supervised children:
 
       def start(_type, _args) do
-        :ok = MyApp.Statix.connect()
+        children = [
+          # ...
+          MyApp.Statix
+        ]
 
         # ...
+        Supervisor.start_link(children, strategy: :one_for_one)
       end
 
   ## Configuration
@@ -306,6 +309,10 @@ defmodule Statix do
       end
 
     quote location: :keep do
+      use GenServer
+
+      require Logger
+
       @behaviour Statix
 
       unquote(current_statix)
@@ -340,6 +347,21 @@ defmodule Statix do
 
       def set(key, val, options \\ []) do
         Statix.transmit(current_statix(), :set, key, val, options)
+      end
+
+      def init(_init_arg) do
+        Process.flag(:trap_exit, true)
+        connect()
+        {:ok, []}
+      end
+
+      def start_link(opts) do
+        GenServer.start_link(__MODULE__, :ok, opts)
+      end
+
+      def handle_info({:EXIT, port, reason}, %Statix.Conn{sock: __MODULE__} = state) do
+        Logger.error("Port #{inspect(port)} exited with reason #{reason}")
+        {:stop, :normal, state}
       end
 
       defoverridable(
