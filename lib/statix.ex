@@ -10,16 +10,19 @@ defmodule Statix do
       end
 
   This will make `MyApp.Statix` a Statix connection that implements the `Statix`
-  behaviour. This connection can be started with the `MyApp.Statix.connect/1`
-  function (see the `c:connect/1` callback) and a few functions can be called on
-  it to report metrics to the StatsD-compatible server read from the
-  configuration. Usually, `connect/1` is called in your application's
-  `c:Application.start/2` callback:
+  behaviour. A few functions can be called on it to report metrics to the
+  StatsD-compatible server read from the configuration. The connection can be
+  started by including `MyApp.Statix` in your application's `c:Application.start/2`
+  callback's list of supervised children:
 
       def start(_type, _args) do
-        :ok = MyApp.Statix.connect()
+        children = [
+          # ...
+          MyApp.Statix
+        ]
 
         # ...
+        Supervisor.start_link(children, strategy: :one_for_one)
       end
 
   ## Configuration
