@@ -306,6 +306,10 @@ defmodule Statix do
       end
 
     quote location: :keep do
+      use GenServer
+
+      require Logger
+
       @behaviour Statix
 
       unquote(current_statix)
@@ -340,6 +344,21 @@ defmodule Statix do
 
       def set(key, val, options \\ []) do
         Statix.transmit(current_statix(), :set, key, val, options)
+      end
+
+      def init(_init_arg) do
+        Process.flag(:trap_exit, true)
+        connect()
+        {:ok, []}
+      end
+
+      def start_link(opts) do
+        GenServer.start_link(__MODULE__, :ok, opts)
+      end
+
+      def handle_info({:EXIT, port, reason}, %Statix.Conn{sock: __MODULE__} = state) do
+        Logger.error("Port #{inspect(port)} exited with reason #{reason}")
+        {:stop, :normal, state}
       end
 
       defoverridable(
