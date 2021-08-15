@@ -42,7 +42,7 @@ Add Statix as a dependency to your `mix.exs` file:
 
 ```elixir
 defp deps() do
-  [{:statix, ">= 0.0.0"}]
+  [{:statix, ">= 1.4.0"}]
 end
 ```
 
