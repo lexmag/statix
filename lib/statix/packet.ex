@@ -27,7 +27,7 @@ defmodule Statix.Packet do
       ] ++ anc_data_part
   end
 
-  def build(header, :event, key, val, options) do
+  def build(header, :event, _prefix, key, val, options) do
     title_len = key |> String.length() |> Integer.to_string()
     text_len = val |> String.length() |> Integer.to_string()
 
@@ -42,8 +42,8 @@ defmodule Statix.Packet do
     |> set_option(:tags, options[:tags])
   end
 
-  def build(header, name, key, val, options) do
-    [header, key, ?:, val, ?|, metric_type(name)]
+  def build(header, name, prefix, key, val, options) do
+    [header, prefix, key, ?:, val, ?|, metric_type(name)]
     |> set_option(:sample_rate, options[:sample_rate])
     |> set_option(:tags, options[:tags])
   end

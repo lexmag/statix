@@ -380,10 +380,10 @@ defmodule Statix do
   def new(module, options) do
     config = get_config(module, options)
     conn = Conn.new(config.host, config.port)
-    header = IO.iodata_to_binary([conn.header | config.prefix])
+    header = IO.iodata_to_binary([conn.header])
 
     %__MODULE__{
-      conn: %{conn | header: header},
+      conn: %{conn | header: header, prefix: config.prefix},
       pool: build_pool(module, config.pool_size),
       tags: config.tags
     }

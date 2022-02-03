@@ -12,6 +12,13 @@ defmodule Statix.ConfigTest do
     assert_receive {:test_server, _, "foo.sample:2|c|#tag:test"}
   end
 
+  test "events do not get metric prefixes" do
+    connect(tags: ["tag:test"], prefix: "foo", port: @server_port)
+
+    event("sample title", "sample text")
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text|#tag:test"}
+  end
+
   test "global tags when present" do
     Application.put_env(:statix, :tags, ["tag:test"])
 

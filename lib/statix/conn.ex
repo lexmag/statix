@@ -1,7 +1,7 @@
 defmodule Statix.Conn do
   @moduledoc false
 
-  defstruct [:sock, :header]
+  defstruct [:sock, :header, :prefix]
 
   alias Statix.Packet
 
@@ -30,11 +30,11 @@ defmodule Statix.Conn do
     %__MODULE__{conn | sock: sock}
   end
 
-  def transmit(%__MODULE__{header: header, sock: sock}, type, key, val, options)
+  def transmit(%__MODULE__{header: header, sock: sock, prefix: prefix}, type, key, val, options)
       when is_binary(val) and is_list(options) do
     result =
       header
-      |> Packet.build(type, key, val, options)
+      |> Packet.build(type, prefix, key, val, options)
       |> transmit(sock)
 
     if result == {:error, :port_closed} do
