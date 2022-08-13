@@ -7,13 +7,9 @@ on:
   pull_request:
 
 jobs:
-  test:
-    name: Test suite
-
+  format:
+    name: Code linting
     runs-on: ubuntu-18.04
-
-    env:
-      MIX_ENV: test
 
     strategy:
       matrix:
@@ -40,37 +36,6 @@ jobs:
         with:
           elixir-version: ${{ matrix.versions.elixir }}
           otp-version: ${{ matrix.versions.otp }}
-
-      - name: Run docker-compose
-        run: docker-compose up --detach
-
-      - name: Install dependencies
-        run: mix deps.get
-
-      - name: Compile applications
-        run: mix compile --warning-as-errors
-
-      - name: Set up Xavi database
-        run: pushd apps/xavi && mix ecto.reset && popd
-
-      - name: Set up Pirlo database
-        run: pushd apps/pirlo && mix ecto.reset && popd
-
-      - name: Run tests
-        run: mix test
-
-  format:
-    name: Code linting
-    runs-on: ubuntu-18.04
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Elixir environment
-        uses: erlef/setup-beam@v1
-        with:
-          elixir-version: "1.7"
-          otp-version: "20.3"
 
       - name: Install dependencies
         run: mix deps.get
