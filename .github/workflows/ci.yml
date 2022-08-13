@@ -14,6 +14,7 @@ jobs:
 
     env:
       MIX_ENV: test
+      DATABASE_URL: "ecto://postgres:postgres@localhost:5432/statix_test"
 
     strategy:
       matrix:
@@ -49,12 +50,6 @@ jobs:
 
       - name: Compile applications
         run: mix compile --warning-as-errors
-
-      - name: Set up Xavi database
-        run: pushd apps/xavi && mix ecto.reset && popd
-
-      - name: Set up Pirlo database
-        run: pushd apps/pirlo && mix ecto.reset && popd
 
       - name: Run tests
         run: mix test
