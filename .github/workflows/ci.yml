@@ -10,7 +10,7 @@ jobs:
   test:
     name: Test suite
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
 
     env:
       MIX_ENV: test
@@ -28,7 +28,7 @@ jobs:
         include:
           - versions: { otp: 20.3, elixir: 1.6 }
             env: STATIX_TEST_RUNTIME_CONFIG=true
-
+            
           - versions: { otp: 20.3, elixir: 1.6 }
             env: STATIX_TEST_RUNTIME_CONFIG=false
 
@@ -61,7 +61,7 @@ jobs:
 
   format:
     name: Code linting
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
 
     steps:
       - uses: actions/checkout@v2
