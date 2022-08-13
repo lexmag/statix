@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    name: Test suite
+
+    runs-on: ubuntu-18.04
+
+    env:
+      MIX_ENV: test
+
+    strategy:
+      matrix:
+        versions:
+          [
+            { otp: 18.3, elixir: 1.3 },
+            { otp: 19.3, elixir: 1.4 },
+            { otp: 20.3, elixir: 1.5 },
+            { otp: 20.3, elixir: 1.6 },
+            { otp: 21.0, elixir: 1.7 },
+          ]
+        include:
+          - versions: { otp: 20.3, elixir: 1.6 }
+            env: STATIX_TEST_RUNTIME_CONFIG=true
+            
+          - versions: { otp: 20.3, elixir: 1.6 }
+            env: STATIX_TEST_RUNTIME_CONFIG=false
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Elixir environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.versions.elixir }}
+          otp-version: ${{ matrix.versions.otp }}
+
+      - name: Run docker-compose
+        run: docker-compose up --detach
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile applications
+        run: mix compile --warning-as-errors
+
+      - name: Set up Xavi database
+        run: pushd apps/xavi && mix ecto.reset && popd
+
+      - name: Set up Pirlo database
+        run: pushd apps/pirlo && mix ecto.reset && popd
+
+      - name: Run tests
+        run: mix test
+
+  format:
+    name: Code linting
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Elixir environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: "1.7"
+          otp-version: "20.3"
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Check format
+        run: mix format --check-formatted
