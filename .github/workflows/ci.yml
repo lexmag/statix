@@ -28,10 +28,10 @@ jobs:
           ]
         include:
           - versions: { otp: 20.3, elixir: 1.6 }
-            env: STATIX_TEST_RUNTIME_CONFIG=true
+            env: true
             
           - versions: { otp: 20.3, elixir: 1.6 }
-            env: STATIX_TEST_RUNTIME_CONFIG=false
+            env: false
 
     steps:
       - uses: actions/checkout@v2
@@ -41,6 +41,12 @@ jobs:
         with:
           elixir-version: ${{ matrix.versions.elixir }}
           otp-version: ${{ matrix.versions.otp }}
+      
+      - if: ${{ matrix.env }} == true
+        run: STATIX_TEST_RUNTIME_CONFIG=true
+      
+      - if: ${{ matrix.env }} == false
+        run: STATIX_TEST_RUNTIME_CONFIG=false
 
       - name: Run docker-compose
         run: docker-compose up --detach
