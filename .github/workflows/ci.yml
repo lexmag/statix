@@ -39,11 +39,13 @@ jobs:
       
       - name: Statix test with runtime config true
         if: ${{ matrix.versions.env }} == 'set'
-        run: STATIX_TEST_RUNTIME_CONFIG=true
+        env:
+          STATIX_TEST_RUNTIME_CONFIG: true
       
       - name: Statix test with runtime config false
         if: ${{ matrix.versions.env }} == 'unset'
-        run: STATIX_TEST_RUNTIME_CONFIG=false
+        env:
+          STATIX_TEST_RUNTIME_CONFIG: false
 
       - name: Run docker-compose
         run: docker-compose up --detach
