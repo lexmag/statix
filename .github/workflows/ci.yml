@@ -23,8 +23,8 @@ jobs:
             { otp: 18.3, elixir: 1.3 },
             { otp: 19.3, elixir: 1.4 },
             { otp: 20.3, elixir: 1.5 },
-            { otp: 20.3, elixir: 1.6, env: true },
-            { otp: 20.3, elixir: 1.6, env: false },
+            { otp: 20.3, elixir: 1.6, env: 'true' },
+            { otp: 20.3, elixir: 1.6, env: 'false' },
             { otp: 21.0, elixir: 1.7 },
           ]
 
@@ -37,10 +37,10 @@ jobs:
           elixir-version: ${{ matrix.versions.elixir }}
           otp-version: ${{ matrix.versions.otp }}
       
-      - if: ${{ matrix.versions.env }} == true
+      - if: ${{ matrix.versions.env }} == 'true'
         run: STATIX_TEST_RUNTIME_CONFIG=true
       
-      - if: ${{ matrix.versions.env }} == false
+      - if: ${{ matrix.versions.env }} == 'false'
         run: STATIX_TEST_RUNTIME_CONFIG=false
 
       - name: Run docker-compose
