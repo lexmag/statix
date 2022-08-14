@@ -37,9 +37,12 @@ jobs:
           elixir-version: ${{ matrix.versions.elixir }}
           otp-version: ${{ matrix.versions.otp }}
       
-      - if: ${{ matrix.versions.env }}
-        run: STATIX_TEST_RUNTIME_CONFIG=${{ matrix.versions.env }}
+      - if: ${{ matrix.versions.env }} == true
+        run: STATIX_TEST_RUNTIME_CONFIG=true
       
+      - if: ${{ matrix.versions.env }} == false
+        run: STATIX_TEST_RUNTIME_CONFIG=false
+
       - name: Run docker-compose
         run: docker-compose up --detach
 
