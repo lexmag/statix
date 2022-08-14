@@ -37,13 +37,13 @@ jobs:
           elixir-version: ${{ matrix.versions.elixir }}
           otp-version: ${{ matrix.versions.otp }}
       
-      - name: Statix test with runtime config true
+      - name: Set Statix runtime config to true
         if: ${{ matrix.versions.runtime == 'yes' }}
         run: echo "Statix runtime config value is $STATIX_TEST_RUNTIME_CONFIG"
         env:
           STATIX_TEST_RUNTIME_CONFIG: true
       
-      - name: Statix test with runtime config false
+      - name: Set Statix runtime config to false
         if: ${{ matrix.versions.runtime == 'no' }}
         run: echo "Statix runtime config value is $STATIX_TEST_RUNTIME_CONFIG"
         env:
