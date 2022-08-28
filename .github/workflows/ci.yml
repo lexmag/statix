@@ -9,10 +9,10 @@ on:
 jobs:
   test:
     name: Test suite
-
-    runs-on: ubuntu-18.04
+    runs-on: self-hosted
 
     env:
+      ImageOS: ubuntu18
       MIX_ENV: test
       DATABASE_URL: "ecto://postgres:postgres@localhost:5432/statix_test"
 
@@ -63,7 +63,10 @@ jobs:
 
   format:
     name: Code linting
-    runs-on: ubuntu-18.04
+    runs-on: self-hosted
+
+    env:
+      ImageOS: ubuntu18
 
     steps:
       - uses: actions/checkout@v2
