@@ -1,34 +1,8 @@
 defmodule Statix.Packet do
   @moduledoc false
 
-  use Bitwise
-
-  otp_release = :erlang.system_info(:otp_release)
-  @addr_family if(otp_release >= '19', do: [1], else: [])
-
-  def header({n1, n2, n3, n4}, port) do
-    true = Code.ensure_loaded?(:gen_udp)
-
-    anc_data_part =
-      if function_exported?(:gen_udp, :send, 5) do
-        [0, 0, 0, 0]
-      else
-        []
-      end
-
-    @addr_family ++
-      [
-        band(bsr(port, 8), 0xFF),
-        band(port, 0xFF),
-        band(n1, 0xFF),
-        band(n2, 0xFF),
-        band(n3, 0xFF),
-        band(n4, 0xFF)
-      ] ++ anc_data_part
-  end
-
-  def build(header, name, key, val, options) do
-    [header, key, ?:, val, ?|, metric_type(name)]
+  def build(prefix, name, key, val, options) do
+    [prefix, key, ?:, val, ?|, metric_type(name)]
     |> set_option(:sample_rate, options[:sample_rate])
     |> set_option(:tags, options[:tags])
   end
