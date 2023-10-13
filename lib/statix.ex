@@ -359,11 +359,10 @@ defmodule Statix do
   @doc false
   def new(module, options) do
     config = get_config(module, options)
-    conn = Conn.new(config.host, config.port)
-    header = IO.iodata_to_binary([conn.header | config.prefix])
+    conn = Conn.new(config.host, config.port, config.prefix)
 
     %__MODULE__{
-      conn: %{conn | header: header},
+      conn: conn,
       pool: build_pool(module, config.pool_size),
       tags: config.tags
     }

@@ -1,21 +1,20 @@
 defmodule Statix.Conn do
   @moduledoc false
 
-  defstruct [:sock, :header]
+  defstruct [:sock, :address, :port, :prefix]
 
   alias Statix.Packet
 
   require Logger
 
-  def new(host, port) when is_binary(host) do
-    new(String.to_charlist(host), port)
+  def new(host, port, prefix) when is_binary(host) do
+    new(String.to_charlist(host), port, prefix)
   end
 
-  def new(host, port) when is_list(host) or is_tuple(host) do
+  def new(host, port, prefix) when is_list(host) or is_tuple(host) do
     case :inet.getaddr(host, :inet) do
       {:ok, address} ->
-        header = Packet.header(address, port)
-        %__MODULE__{header: header}
+        %__MODULE__{address: address, port: port, prefix: prefix}
 
       {:error, reason} ->
         raise(
@@ -30,34 +29,31 @@ defmodule Statix.Conn do
     %__MODULE__{conn | sock: sock}
   end
 
-  def transmit(%__MODULE__{header: header, sock: sock}, type, key, val, options)
+  def transmit(%__MODULE__{sock: sock, prefix: prefix} = conn, type, key, val, options)
       when is_binary(val) and is_list(options) do
     result =
-      header
+      prefix
       |> Packet.build(type, key, val, options)
-      |> transmit(sock)
+      |> transmit(conn)
 
-    if result == {:error, :port_closed} do
+    with {:error, error} <- result do
       Logger.error(fn ->
         if(is_atom(sock), do: "", else: "Statix ") <>
-          "#{inspect(sock)} #{type} metric \"#{key}\" lost value #{val}" <> " due to port closure"
+          "#{inspect(sock)} #{type} metric \"#{key}\" lost value #{val}" <>
+          " error=#{inspect(error)}"
       end)
     end
 
     result
   end
 
-  defp transmit(packet, sock) do
-    try do
-      Port.command(sock, packet)
-    rescue
-      ArgumentError ->
-        {:error, :port_closed}
+  defp transmit(packet, %__MODULE__{address: address, port: port, sock: sock_name}) do
+    sock = Process.whereis(sock_name)
+
+    if sock do
+      :gen_udp.send(sock, address, port, packet)
     else
-      true ->
-        receive do
-          {:inet_reply, _port, status} -> status
-        end
+      {:error, :port_closed}
     end
   end
 end

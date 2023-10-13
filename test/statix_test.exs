@@ -9,7 +9,11 @@ defmodule StatixTest do
 
   defp close_port() do
     %{pool: pool} = current_statix()
-    Enum.each(pool, &Port.close/1)
+
+    Enum.each(pool, fn module_name ->
+      sock = Process.whereis(module_name)
+      :gen_udp.close(sock)
+    end)
   end
 
   setup do
@@ -156,22 +160,22 @@ defmodule StatixTest do
 
     assert capture_log(fn ->
              assert {:error, :port_closed} == increment("sample")
-           end) =~ "counter metric \"sample\" lost value 1 due to port closure"
+           end) =~ "counter metric \"sample\" lost value 1 error=:port_closed\n\e[0m"
 
     assert capture_log(fn ->
              assert {:error, :port_closed} == decrement("sample")
-           end) =~ "counter metric \"sample\" lost value -1 due to port closure"
+           end) =~ "counter metric \"sample\" lost value -1 error=:port_closed\n\e[0m"
 
     assert capture_log(fn ->
              assert {:error, :port_closed} == gauge("sample", 2)
-           end) =~ "gauge metric \"sample\" lost value 2 due to port closure"
+           end) =~ "gauge metric \"sample\" lost value 2 error=:port_closed\n\e[0m"
 
     assert capture_log(fn ->
              assert {:error, :port_closed} == histogram("sample", 3)
-           end) =~ "histogram metric \"sample\" lost value 3 due to port closure"
+           end) =~ "histogram metric \"sample\" lost value 3 error=:port_closed\n\e[0m"
 
     assert capture_log(fn ->
              assert {:error, :port_closed} == timing("sample", 2.5)
-           end) =~ "timing metric \"sample\" lost value 2.5 due to port closure"
+           end) =~ "timing metric \"sample\" lost value 2.5 error=:port_closed\n\e[0m"
   end
 end
