@@ -1,6 +1,6 @@
 # Statix
 
-[![Build Status](https://travis-ci.com/lexmag/statix.svg?branch=master)](https://travis-ci.com/lexmag/statix)
+[![CI Status](https://github.com/lexmag/statix/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/lexmag/statix/actions/workflows/ci.yml)
 [![Hex Version](https://img.shields.io/hexpm/v/statix.svg "Hex Version")](https://hex.pm/packages/statix)
 
 Statix is an Elixir client for StatsD-compatible servers.
