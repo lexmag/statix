@@ -7,6 +7,13 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    name: Code linting
+    uses: lexmag/elixir-actions/.github/workflows/lint.yml@v2
+    with:
+      otp-version: "24"
+      elixir-version: "1.14"
+
   test:
     name: Test suite
     runs-on: ubuntu-20.04
