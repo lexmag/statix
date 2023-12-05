@@ -1,7 +1,7 @@
 defmodule Statix.Packet do
   @moduledoc false
 
-  use Bitwise
+  import Bitwise
 
   def header({n1, n2, n3, n4}, port) do
     true = Code.ensure_loaded?(:gen_udp)
