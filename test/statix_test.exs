@@ -1,7 +1,9 @@
 runtime_config? = System.get_env("STATIX_TEST_RUNTIME_CONFIG") in ["1", "true"]
 
 defmodule StatixTest do
-  use Statix.TestCase
+  @server_port 8525
+
+  use Statix.TestCase, port: @server_port
 
   import ExUnit.CaptureLog
 
@@ -13,7 +15,7 @@ defmodule StatixTest do
   end
 
   setup do
-    connect()
+    connect(port: @server_port)
   end
 
   test "increment/1,2,3" do
@@ -147,6 +149,53 @@ defmodule StatixTest do
     assert_receive {:test_server, _, "sample:3|s|@1.0|#foo,bar"}
 
     set("sample", 3, sample_rate: 0.0)
+
+    refute_received _any
+  end
+
+  test "event/2,3" do
+    # a generic Unix time
+    now_unix = 1234
+
+    event("sample title", "sample text")
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text"}
+
+    event("sample title", "sample text", timestamp: now_unix)
+    s = "_e{12,11}:sample title|sample text|d:#{now_unix}"
+    assert_receive {:test_server, _, ^s}
+
+    event("sample title", "sample text", hostname: "sample.hostname")
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text|h:sample.hostname"}
+
+    event("sample title", "sample text", aggregation_key: "sample_aggregation_key")
+
+    assert_receive {:test_server, _,
+                    "_e{12,11}:sample title|sample text|k:sample_aggregation_key"}
+
+    event("sample title", "sample text", priority: :normal)
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text|p:normal"}
+
+    event("sample title", "sample text", source_type_name: "sample source type")
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text|s:sample source type"}
+
+    event("sample title", "sample text", alert_type: :warning)
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text|t:warning"}
+
+    event("sample title", "sample text", tags: ["foo", "bar"])
+    assert_receive {:test_server, _, "_e{12,11}:sample title|sample text|#foo,bar"}
+
+    event("sample title", "sample text",
+      timestamp: now_unix,
+      hostname: "H",
+      aggregation_key: "K",
+      priority: :low,
+      source_type_name: "S",
+      alert_type: "T",
+      tags: ["F", "B"]
+    )
+
+    s = "_e{12,11}:sample title|sample text|d:#{now_unix}|h:H|k:K|p:low|s:S|t:T|#F,B"
+    assert_receive {:test_server, _, ^s}
 
     refute_received _any
   end
