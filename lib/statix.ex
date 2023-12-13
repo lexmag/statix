@@ -226,6 +226,24 @@ defmodule Statix do
   @callback timing(key, value :: String.Chars.t(), options) :: on_send
 
   @doc """
+  Same as `distribution(key, value, [])`.
+  """
+  @callback distribution(key, value :: String.Chars.t()) :: on_send
+
+  @doc """
+  Writes the given `value` to the StatsD distribution identified by `key`.
+
+  `value` is expected in milliseconds.
+
+  ## Examples
+
+      iex> MyApp.Statix.distribution("rendering", 12, [])
+      :ok
+
+  """
+  @callback distribution(key, value :: String.Chars.t(), options) :: on_send
+
+  @doc """
   Writes the given `value` to the StatsD set identified by `key`.
 
   ## Examples
@@ -330,6 +348,10 @@ defmodule Statix do
         Statix.transmit(current_statix(), :timing, key, val, options)
       end
 
+      def distribution(key, val, options \\ []) do
+        Statix.transmit(current_statix(), :distribution, key, val, options)
+      end
+
       def measure(key, options \\ [], fun) when is_function(fun, 0) do
         {elapsed, result} = :timer.tc(fun)
 
@@ -349,7 +371,8 @@ defmodule Statix do
         histogram: 3,
         timing: 3,
         measure: 3,
-        set: 3
+        set: 3,
+        distribution: 3
       )
     end
   end
