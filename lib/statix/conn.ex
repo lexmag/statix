@@ -7,6 +7,9 @@ defmodule Statix.Conn do
 
   require Logger
 
+  otp_release = :erlang.system_info(:otp_release)
+  @otp_gte_26 otp_release >= ~c"26"
+
   def new(host, port, prefix) when is_binary(host) do
     new(String.to_charlist(host), port, prefix)
   end
@@ -50,10 +53,30 @@ defmodule Statix.Conn do
   defp transmit(packet, %__MODULE__{address: address, port: port, sock: sock_name}) do
     sock = Process.whereis(sock_name)
 
-    if sock do
-      :gen_udp.send(sock, address, port, packet)
+    # The check below was implemented for backwards compatibility to avoid a performance issue on
+    # OTP on versiones older than 26. If the OTP version is 26 or above, we use gen_udp.send/4. If
+    # the version is older than that, we use the existing performance issue workaround.
+    if @otp_gte_26 do
+      if sock do
+        :gen_udp.send(sock, address, port, packet)
+      else
+        {:error, :port_closed}
+      end
     else
-      {:error, :port_closed}
+      # This branch will only be executed on older version of OTP and will be eventually removed.
+      packet_with_header = Packet.add_header(packet, address, port)
+
+      try do
+        Port.command(sock, packet_with_header)
+      rescue
+        ArgumentError ->
+          {:error, :port_closed}
+      else
+        true ->
+          receive do
+            {:inet_reply, _port, status} -> status
+          end
+      end
     end
   end
 end
