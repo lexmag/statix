@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  lint:
+    name: Code linting
+    uses: lexmag/elixir-actions/.github/workflows/lint.yml@v2
+    with:
+      otp-version: "24"
+      elixir-version: "1.14"
+
+  test:
+    name: Test suite
+    runs-on: ubuntu-20.04
+
+    strategy:
+      matrix:
+        otp: ["24"]
+        elixir: ["1.14"]
+        runtime_config: [true, false]
+
+        include:
+          - otp: "20"
+            elixir: "1.6"
+            runtime_config: false
+
+    env:
+      MIX_ENV: test
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Elixir environment
+        uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+
+      - name: Install dependencies
+        run: mix deps.get --only test
+
+      - name: Run tests
+        run: mix test
+        env:
+          STATIX_TEST_RUNTIME_CONFIG: ${{ matrix.runtime_config }}
